@@ -17,5 +17,22 @@ services:
       timeout: 5s
       retries: 5
 
+  localstack:
+    image: localstack/localstack
+    container_name: support_triage_localstack
+    restart: unless-stopped
+    ports:
+      - '4566:4566'
+    environment:
+      SERVICES: s3
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4566/_localstack/health']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pgdata:
+  localstack_data:
