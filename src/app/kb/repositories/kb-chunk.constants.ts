@@ -1,0 +1,3 @@
+export const KB_CHUNK_REPOSITORY_DEFAULTS = {
+  INSERT_BATCH_SIZE: 500,
+} as const;

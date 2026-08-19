@@ -6,7 +6,7 @@ export const METRIC_OPERATIONS = ['EMBEDDING', 'TICKET_OCR', 'TICKET_STT'] as co
 export type MetricOperation = (typeof METRIC_OPERATIONS)[number];
 
 export const metricLogsTable = pgTable('metric_logs', {
-  id: uuid('id').$type<UUID>().primaryKey().defaultRandom(),
+  id: uuid('id').$type<UUID>().primaryKey(),
   operation: text('operation').$type<MetricOperation>().notNull(),
   model: text('model').notNull(),
   promptTokens: integer('prompt_tokens').notNull().default(0),

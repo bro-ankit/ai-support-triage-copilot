@@ -1,0 +1,3 @@
+export const INGEST_KB_ARTICLE_DEFAULTS = {
+  EMBED_CONCURRENCY: 20,
+} as const;

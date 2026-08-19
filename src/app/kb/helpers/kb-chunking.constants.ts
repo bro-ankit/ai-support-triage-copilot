@@ -1,0 +1,4 @@
+export const KB_CHUNKING_DEFAULTS = {
+  TARGET_CHUNK_SIZE: 1000,
+  OVERLAP_SIZE: 150,
+} as const;

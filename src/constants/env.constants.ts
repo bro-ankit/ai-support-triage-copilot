@@ -18,6 +18,9 @@ export const ENV_VARIABLES = {
   SERVER: {
     PORT: 'SERVER_PORT',
   },
+  RERANKER: {
+    MODEL: 'RERANKER_MODEL',
+  },
   S3: {
     ENDPOINT: 'S3_ENDPOINT',
     REGION: 'S3_REGION',

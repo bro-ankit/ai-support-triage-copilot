@@ -3,11 +3,13 @@ import { LoggerModule } from 'nestjs-pino';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { KbModule } from './app/kb/kb.module';
 import { CoreInfraModule } from './core-infra.module';
 
 @Module({
   imports: [
     CoreInfraModule,
+    KbModule,
     LoggerModule.forRoot({
       pinoHttp: {
         transport: process.env['NODE_ENV'] !== 'production' ? { target: 'pino-pretty' } : undefined,
@@ -21,4 +23,4 @@ import { CoreInfraModule } from './core-infra.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

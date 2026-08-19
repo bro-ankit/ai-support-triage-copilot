@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
@@ -26,6 +28,7 @@ export class MetricsReporter {
     this.logger.debug({ operation, totalTokens: usage.totalTokens, estimatedCostUsd }, 'Recording metric');
     try {
       await this.db.insert(metricLogsTable).values({
+        id: randomUUID(),
         operation,
         model,
         promptTokens: usage.promptTokens,
