@@ -1,11 +1,11 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { ENV_VARIABLES } from '../../constants/env.constants';
-import type { IStorageClient } from '../storage.interface';
+import type { IStorageClient, PresignedUpload } from '../storage.interface';
 import { S3_CLIENT, S3_STORAGE_DEFAULTS } from './s3.constants';
 
 @Injectable()
@@ -20,12 +20,16 @@ export class S3StorageClient implements IStorageClient {
     this.bucketName = config.getOrThrow<string>(ENV_VARIABLES.S3.BUCKET_NAME);
   }
 
-  async getPresignedUploadUrl(key: string, mimeType: string): Promise<string> {
-    this.logger.debug({ key, mimeType }, 'Generating presigned upload URL');
-    const command = new PutObjectCommand({ Bucket: this.bucketName, Key: key, ContentType: mimeType });
-    return getSignedUrl(this.client, command, {
-      expiresIn: S3_STORAGE_DEFAULTS.PRESIGNED_UPLOAD_URL_EXPIRY_SECONDS,
+  async getPresignedUploadUrl(key: string, mimeType: string, maxSizeBytes: number): Promise<PresignedUpload> {
+    this.logger.debug({ key, mimeType, maxSizeBytes }, 'Generating presigned upload post');
+    const { url, fields } = await createPresignedPost(this.client, {
+      Bucket: this.bucketName,
+      Key: key,
+      Conditions: [['content-length-range', 0, maxSizeBytes], { 'Content-Type': mimeType }],
+      Fields: { 'Content-Type': mimeType },
+      Expires: S3_STORAGE_DEFAULTS.PRESIGNED_UPLOAD_URL_EXPIRY_SECONDS,
     });
+    return { url, fields };
   }
 
   async getObject(key: string): Promise<Buffer> {

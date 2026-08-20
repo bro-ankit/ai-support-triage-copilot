@@ -21,6 +21,16 @@ class DummyTicketOcrService {
   async untaggedRun(): Promise<string | undefined> {
     return this.context.getOperation();
   }
+
+  async callPrivateRun(): Promise<string | undefined> {
+    return this.privateRun();
+  }
+
+  @TrackAiUsage('TICKET_STT')
+  private async privateRun(): Promise<string | undefined> {
+    await wait(1);
+    return this.context.getOperation();
+  }
 }
 
 describe('AiUsageDiscoveryService IT', () => {
@@ -44,6 +54,15 @@ describe('AiUsageDiscoveryService IT', () => {
       test('Then the operation is available via AiUsageContextService for the duration of the call', async () => {
         const seen = await dummy.run();
         expect(seen).toBe('TICKET_OCR');
+      });
+    });
+  });
+
+  describe('Given a private method decorated with @TrackAiUsage', () => {
+    describe('When it is called via a public wrapper method', () => {
+      test('Then the operation is still tracked, TypeScript private is erased at runtime', async () => {
+        const seen = await dummy.callPrivateRun();
+        expect(seen).toBe('TICKET_STT');
       });
     });
   });

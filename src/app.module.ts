@@ -4,12 +4,14 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { KbModule } from './app/kb/kb.module';
+import { TicketsModule } from './app/tickets/tickets.module';
 import { CoreInfraModule } from './core-infra.module';
 
 @Module({
   imports: [
     CoreInfraModule,
     KbModule,
+    TicketsModule,
     LoggerModule.forRoot({
       pinoHttp: {
         transport: process.env['NODE_ENV'] !== 'production' ? { target: 'pino-pretty' } : undefined,

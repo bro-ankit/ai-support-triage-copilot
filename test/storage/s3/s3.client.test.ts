@@ -1,22 +1,23 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { TestBed } from '@automock/jest';
 import { ConfigService } from '@nestjs/config';
 
 import { S3StorageClient } from '../../../src/storage/s3/s3.client';
-import { S3_CLIENT } from '../../../src/storage/s3/s3.constants';
+import { S3_CLIENT, S3_STORAGE_DEFAULTS } from '../../../src/storage/s3/s3.constants';
 
-jest.mock('@aws-sdk/s3-request-presigner');
+jest.mock('@aws-sdk/s3-presigned-post');
 
 const BUCKET_NAME = 'support-triage-attachments';
 const OBJECT_KEY = 'tickets/ticket-1/screenshot.png';
 const MIME_TYPE = 'image/png';
-const PRESIGNED_URL = 'https://s3.example.com/presigned-upload';
+const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+const PRESIGNED_POST = { url: 'https://s3.example.com/support-triage-attachments', fields: { key: OBJECT_KEY } };
 
 describe('S3StorageClient Unit Test', () => {
   let sut: S3StorageClient;
   let s3Client: jest.Mocked<S3Client>;
-  const mockGetSignedUrl = getSignedUrl as jest.MockedFunction<typeof getSignedUrl>;
+  const mockCreatePresignedPost = createPresignedPost as jest.MockedFunction<typeof createPresignedPost>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(S3StorageClient)
@@ -32,21 +33,25 @@ describe('S3StorageClient Unit Test', () => {
     jest.clearAllMocks();
   });
 
-  describe('Given getPresignedUploadUrl, When called with a key and mime type', () => {
-    test('Then it requests a signed URL for a PutObjectCommand scoped to the bucket and key', async () => {
-      mockGetSignedUrl.mockResolvedValueOnce(PRESIGNED_URL);
+  describe('Given getPresignedUploadUrl, When called with a key, mime type, and max size', () => {
+    test('Then it requests a presigned POST scoped to the bucket, key, mime type, and size limit', async () => {
+      mockCreatePresignedPost.mockResolvedValueOnce(PRESIGNED_POST);
 
-      const result = await sut.getPresignedUploadUrl(OBJECT_KEY, MIME_TYPE);
+      const result = await sut.getPresignedUploadUrl(OBJECT_KEY, MIME_TYPE, MAX_SIZE_BYTES);
 
-      expect(result).toBe(PRESIGNED_URL);
-      const [client, command] = mockGetSignedUrl.mock.calls[0];
-      expect(client).toBe(s3Client);
-      expect(command).toBeInstanceOf(PutObjectCommand);
-      expect((command as PutObjectCommand).input).toEqual({
-        Bucket: BUCKET_NAME,
-        Key: OBJECT_KEY,
-        ContentType: MIME_TYPE,
-      });
+      expect(result).toEqual(PRESIGNED_POST);
+      expect(mockCreatePresignedPost.mock.calls).toEqual([
+        [
+          s3Client,
+          {
+            Bucket: BUCKET_NAME,
+            Key: OBJECT_KEY,
+            Conditions: [['content-length-range', 0, MAX_SIZE_BYTES], { 'Content-Type': MIME_TYPE }],
+            Fields: { 'Content-Type': MIME_TYPE },
+            Expires: S3_STORAGE_DEFAULTS.PRESIGNED_UPLOAD_URL_EXPIRY_SECONDS,
+          },
+        ],
+      ]);
     });
   });
 
