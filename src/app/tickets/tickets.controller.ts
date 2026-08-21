@@ -1,16 +1,21 @@
 import type { UUID } from 'node:crypto';
 
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Body, Controller, Get, MessageEvent, Param, Post, Sse, SseSignal } from '@nestjs/common';
+import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Observable } from 'rxjs';
 
+import { SseProgressStreamUtil } from '../../sse/sse-progress-stream.util';
 import { CompleteTicketAttachmentUploadCommand } from './commands/complete-ticket-attachment-upload.command';
 import { CreateTicketCommand } from './commands/create-ticket.command';
+import { InvestigateTicketCommand } from './commands/investigate-ticket.command';
 import { RequestTicketAttachmentUploadCommand } from './commands/request-ticket-attachment-upload.command';
 import { CreateTicketRequestDto } from './dto/create-ticket-request.dto';
 import { RequestAttachmentUploadRequestDto } from './dto/request-attachment-upload-request.dto';
 import { RequestAttachmentUploadResponseDto } from './dto/request-attachment-upload-response.dto';
+import { TicketInvestigationResponseDto } from './dto/ticket-investigation-response.dto';
 import { TicketAttachmentResponseDto, TicketResponseDto } from './dto/ticket-response.dto';
+import { TicketInvestigationProgressEvent } from './events/ticket-investigation-progress.event';
 import { GetTicketQuery } from './queries/get-ticket.query';
 
 @ApiTags('tickets')
@@ -19,7 +24,8 @@ export class TicketsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-  ) { }
+    private readonly eventBus: EventBus,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a support ticket' })
@@ -53,5 +59,28 @@ export class TicketsController {
   @ApiOkResponse({ type: TicketResponseDto })
   getTicket(@Param('id') ticketId: UUID): Promise<TicketResponseDto> {
     return this.queryBus.execute(new GetTicketQuery(ticketId));
+  }
+
+  @Post(':id/investigate')
+  @Sse()
+  @ApiOperation({
+    summary:
+      'Run the ticket investigation pipeline live over Server-Sent Events: classify, retrieve relevant ' +
+      'KB articles, diagnose, and propose a customer-facing action (subject to a later human approval ' +
+      'gate). The pipeline runs for several seconds, so every call streams progress as it happens ' +
+      'rather than leaving the caller on a blocking loading screen.',
+  })
+  investigate(@Param('id') ticketId: UUID, @SseSignal() signal: AbortSignal): Observable<MessageEvent> {
+    return SseProgressStreamUtil.build({
+      eventBus: this.eventBus,
+      eventType: TicketInvestigationProgressEvent,
+      matches: (event) => event.ticketId === ticketId,
+      mapProgress: (event) => ({ type: 'progress', data: { stage: event.stage, message: event.message } }),
+      execute: () => this.commandBus.execute<InvestigateTicketCommand, TicketInvestigationResponseDto>(
+        new InvestigateTicketCommand(ticketId, signal),
+      ),
+      mapResult: (investigation) => ({ type: 'result', data: investigation }),
+      abortSignal: signal,
+    });
   }
 }

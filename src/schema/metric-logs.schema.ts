@@ -2,7 +2,14 @@ import type { UUID } from 'node:crypto';
 
 import { integer, pgTable, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-export const METRIC_OPERATIONS = ['EMBEDDING', 'TICKET_OCR', 'TICKET_STT'] as const;
+export const METRIC_OPERATIONS = [
+  'EMBEDDING',
+  'TICKET_OCR',
+  'TICKET_STT',
+  'TICKET_CLASSIFY',
+  'TICKET_DIAGNOSE',
+  'TICKET_PROPOSE_ACTION',
+] as const;
 export type MetricOperation = (typeof METRIC_OPERATIONS)[number];
 
 export const metricLogsTable = pgTable('metric_logs', {

@@ -4,9 +4,8 @@ import { TestBed } from '@automock/jest';
 
 import { GetTicketQuery } from '../../../../src/app/tickets/queries/get-ticket.query';
 import { GetTicketQueryHandler } from '../../../../src/app/tickets/queries/get-ticket.query-handler';
-import { TicketAttachmentRepository } from '../../../../src/app/tickets/repositories/ticket-attachment.repository';
 import { TicketRepository } from '../../../../src/app/tickets/repositories/ticket.repository';
-import { mockTicketAttachmentSelect, mockTicketSelect } from '../../../__mocks__';
+import { mockTicketAttachmentSelect, mockTicketSelect, mockDynamicTicket } from '../../../__mocks__';
 import { AssertUtils } from '../../../utils/assert.utils';
 
 const TICKET_ID = randomUUID();
@@ -16,14 +15,12 @@ const ATTACHMENT = mockTicketAttachmentSelect({ ticketId: TICKET_ID });
 describe('GetTicketQueryHandler Unit Test', () => {
   let sut: GetTicketQueryHandler;
   let ticketRepository: jest.Mocked<TicketRepository>;
-  let ticketAttachmentRepository: jest.Mocked<TicketAttachmentRepository>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(GetTicketQueryHandler).compile();
 
     sut = unit;
     ticketRepository = unitRef.get(TicketRepository);
-    ticketAttachmentRepository = unitRef.get(TicketAttachmentRepository);
   });
 
   beforeEach(() => {
@@ -33,12 +30,12 @@ describe('GetTicketQueryHandler Unit Test', () => {
   describe('Given execute', () => {
     describe('When the ticket exists', () => {
       test('Then it returns the ticket with its attachments', async () => {
-        ticketRepository.findById.mockResolvedValue(TICKET);
-        ticketAttachmentRepository.findByTicketId.mockResolvedValue([ATTACHMENT]);
+        ticketRepository.findById.mockResolvedValue(
+          mockDynamicTicket({ attachments: true }, { ...TICKET, attachments: [ATTACHMENT] }),
+        );
 
         const result = await sut.execute(new GetTicketQuery(TICKET_ID));
 
-        expect(ticketAttachmentRepository.findByTicketId).toHaveBeenCalledWith(TICKET_ID);
         expect(result).toEqual({
           id: TICKET.id,
           subject: TICKET.subject,
@@ -61,7 +58,7 @@ describe('GetTicketQueryHandler Unit Test', () => {
     });
 
     describe('When the ticket does not exist', () => {
-      test('Then it throws NotFoundException without fetching attachments', async () => {
+      test('Then it throws NotFoundException', async () => {
         ticketRepository.findById.mockResolvedValue(undefined);
 
         await AssertUtils.assertError(
@@ -69,7 +66,6 @@ describe('GetTicketQueryHandler Unit Test', () => {
           `Ticket ${TICKET_ID} not found`,
           404,
         );
-        expect(ticketAttachmentRepository.findByTicketId).not.toHaveBeenCalled();
       });
     });
   });

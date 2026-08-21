@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
 import { TicketRepository } from '../../../../src/app/tickets/repositories/ticket.repository';
+import { ticketAttachmentsTable } from '../../../../src/schema/ticket-attachments.schema';
 import { ticketsTable } from '../../../../src/schema/tickets.schema';
 import type { TicketInsert } from '../../../../src/schema/tickets.schema';
 import { DrizzleTestEnvironment } from '../../../helpers/drizzle-test-environment';
-import { mockTicketInsert } from '../../../__mocks__';
+import { mockTicketAttachmentInsert, mockTicketInsert } from '../../../__mocks__';
 
 describe('TicketRepository IT', () => {
   let sut: TicketRepository;
@@ -46,13 +47,37 @@ describe('TicketRepository IT', () => {
   });
 
   describe('Given findById', () => {
-    describe('When the ticket exists', () => {
-      test('Then it returns that ticket', async () => {
-        const inserted = await seed({ subject: 'Search returns no results' });
+    describe('When called without relations', () => {
+      test('Then it returns the ticket without an attachments field', async () => {
+        const ticket = await seed({ subject: 'Search returns no results' });
 
-        const result = await sut.findById(inserted.id);
+        const result = await sut.findById(ticket.id);
 
-        expect(result).toEqual(inserted);
+        expect(result).toEqual(ticket);
+      });
+    });
+
+    describe('When called with { attachments: true } and the ticket has attachments', () => {
+      test('Then it returns the ticket with its attachments joined', async () => {
+        const ticket = await seed({ subject: 'Screenshot attached' });
+        const [attachment] = await env.db
+          .insert(ticketAttachmentsTable)
+          .values(mockTicketAttachmentInsert({ ticketId: ticket.id }))
+          .returning();
+
+        const result = await sut.findById(ticket.id, { attachments: true });
+
+        expect(result).toEqual({ ...ticket, attachments: [attachment] });
+      });
+    });
+
+    describe('When called with { attachments: true } and the ticket has no attachments', () => {
+      test('Then it returns the ticket with an empty attachments array', async () => {
+        const ticket = await seed({ subject: 'No attachments' });
+
+        const result = await sut.findById(ticket.id, { attachments: true });
+
+        expect(result).toEqual({ ...ticket, attachments: [] });
       });
     });
 

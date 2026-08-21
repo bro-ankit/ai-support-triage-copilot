@@ -1,6 +1,11 @@
 import type { UUID } from 'node:crypto';
 
+import { relations } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+import { ticketAttachmentsTable } from './ticket-attachments.schema';
+import { ticketClassificationsTable } from './ticket-classifications.schema';
+import { ticketInvestigationsTable } from './ticket-investigations.schema';
 
 export const TICKET_STATUSES = ['open', 'investigating', 'resolved'] as const;
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
@@ -20,3 +25,9 @@ export const ticketsTable = pgTable('tickets', {
 
 export type TicketSelect = typeof ticketsTable.$inferSelect;
 export type TicketInsert = typeof ticketsTable.$inferInsert;
+
+export const TICKETS_RELATIONS = relations(ticketsTable, ({ many }) => ({
+  attachments: many(ticketAttachmentsTable),
+  classifications: many(ticketClassificationsTable),
+  investigations: many(ticketInvestigationsTable),
+}));

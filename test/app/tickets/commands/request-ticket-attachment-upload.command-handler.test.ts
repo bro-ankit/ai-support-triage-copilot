@@ -9,7 +9,12 @@ import { TicketAttachmentRepository } from '../../../../src/app/tickets/reposito
 import { TicketRepository } from '../../../../src/app/tickets/repositories/ticket.repository';
 import type { IStorageClient } from '../../../../src/storage/storage.interface';
 import { STORAGE_CLIENT } from '../../../../src/storage/storage.constants';
-import { mockRequestAttachmentUploadRequestDto, mockTicketAttachmentSelect, mockTicketSelect } from '../../../__mocks__';
+import {
+  mockRequestAttachmentUploadRequestDto,
+  mockTicketAttachmentSelect,
+  mockTicketSelect,
+  mockDynamicTicket,
+} from '../../../__mocks__';
 import { AssertUtils } from '../../../utils/assert.utils';
 
 const TICKET_ID = randomUUID();
@@ -41,7 +46,7 @@ describe('RequestTicketAttachmentUploadCommandHandler Unit Test', () => {
   describe('Given execute', () => {
     describe('When called for an existing ticket', () => {
       test('Then it presigns using the size limit for the requested kind, inserts the attachment, and returns the response', async () => {
-        ticketRepository.findById.mockResolvedValue(TICKET);
+        ticketRepository.findById.mockResolvedValue(mockDynamicTicket({}, { ...TICKET }));
         storageClient.getPresignedUploadUrl.mockResolvedValue(PRESIGNED);
         ticketAttachmentRepository.insert.mockResolvedValue(INSERTED_ATTACHMENT);
 
@@ -90,7 +95,7 @@ describe('RequestTicketAttachmentUploadCommandHandler Unit Test', () => {
 
     describe('When presigning the upload fails', () => {
       test('Then it propagates the error without inserting an attachment row', async () => {
-        ticketRepository.findById.mockResolvedValue(TICKET);
+        ticketRepository.findById.mockResolvedValue(mockDynamicTicket({}, { ...TICKET }));
         storageClient.getPresignedUploadUrl.mockRejectedValue(new Error('storage unavailable'));
 
         await AssertUtils.assertError(
