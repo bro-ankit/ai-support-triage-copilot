@@ -6,6 +6,7 @@ import { AI_CLIENT } from '../../../../src/ai/ai.constants';
 import type { IAiClient } from '../../../../src/ai/ai.interface';
 import { KbChunkRepository } from '../../../../src/app/kb/repositories/kb-chunk.repository';
 import { KbRerankerService } from '../../../../src/app/kb/search/kb-reranker.service';
+import { KbSearchCacheService } from '../../../../src/app/kb/search/kb-search-cache.service';
 import { SEARCH_DEFAULTS } from '../../../../src/app/kb/search/kb-search.constants';
 import { KbSearchService } from '../../../../src/app/kb/search/kb-search.service';
 import { mockKbChunkSelect } from '../../../__mocks__';
@@ -30,6 +31,7 @@ describe('KbSearchService Unit Test', () => {
   let aiClient: jest.Mocked<IAiClient>;
   let kbChunkRepository: jest.Mocked<KbChunkRepository>;
   let kbRerankerService: jest.Mocked<KbRerankerService>;
+  let kbSearchCacheService: jest.Mocked<KbSearchCacheService>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(KbSearchService).compile();
@@ -38,11 +40,13 @@ describe('KbSearchService Unit Test', () => {
     aiClient = unitRef.get(AI_CLIENT);
     kbChunkRepository = unitRef.get(KbChunkRepository);
     kbRerankerService = unitRef.get(KbRerankerService);
+    kbSearchCacheService = unitRef.get(KbSearchCacheService);
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
     aiClient.generateEmbedding.mockResolvedValue(EMBEDDING);
+    kbSearchCacheService.findSimilar.mockResolvedValue(undefined);
   });
 
   describe('Given search', () => {
@@ -60,6 +64,7 @@ describe('KbSearchService Unit Test', () => {
         const result = await sut.search(QUERY);
 
         expect(aiClient.generateEmbedding).toHaveBeenCalledWith(QUERY);
+        expect(kbSearchCacheService.findSimilar).toHaveBeenCalledWith(EMBEDDING);
         expect(kbChunkRepository.findSimilarIds).toHaveBeenCalledWith(
           EMBEDDING,
           SEARCH_DEFAULTS.CANDIDATE_K,
@@ -72,7 +77,25 @@ describe('KbSearchService Unit Test', () => {
           { id: CHUNK_A_ID, text: CHUNK_A.content },
           { id: CHUNK_C_ID, text: CHUNK_C.content },
         ]);
+        expect(kbSearchCacheService.store).toHaveBeenCalledWith(EMBEDDING, [CHUNK_B, CHUNK_A, CHUNK_C]);
         expect(result).toEqual([CHUNK_B, CHUNK_A, CHUNK_C]);
+      });
+    });
+
+    describe('When the semantic cache has a similar prior result', () => {
+      test('Then it returns the cached results directly without querying the repository or reranking', async () => {
+        const cachedResults = [CHUNK_A, CHUNK_B];
+        kbSearchCacheService.findSimilar.mockResolvedValue(cachedResults);
+
+        const result = await sut.search(QUERY);
+
+        expect(aiClient.generateEmbedding).toHaveBeenCalledWith(QUERY);
+        expect(kbSearchCacheService.findSimilar).toHaveBeenCalledWith(EMBEDDING);
+        expect(kbChunkRepository.findSimilarIds).not.toHaveBeenCalled();
+        expect(kbChunkRepository.findByLexical).not.toHaveBeenCalled();
+        expect(kbRerankerService.rerank).not.toHaveBeenCalled();
+        expect(kbSearchCacheService.store).not.toHaveBeenCalled();
+        expect(result).toEqual(cachedResults);
       });
     });
 
@@ -104,6 +127,7 @@ describe('KbSearchService Unit Test', () => {
         expect(result).toEqual([]);
         expect(kbChunkRepository.findByIds).not.toHaveBeenCalled();
         expect(kbRerankerService.rerank).not.toHaveBeenCalled();
+        expect(kbSearchCacheService.store).toHaveBeenCalledWith(EMBEDDING, []);
       });
     });
 

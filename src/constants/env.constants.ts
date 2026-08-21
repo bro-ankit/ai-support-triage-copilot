@@ -29,4 +29,10 @@ export const ENV_VARIABLES = {
     BUCKET_NAME: 'S3_BUCKET_NAME',
     FORCE_PATH_STYLE: 'S3_FORCE_PATH_STYLE',
   },
+  REDIS: {
+    HOST: 'REDIS_HOST',
+    PORT: 'REDIS_PORT',
+    USER: 'REDIS_USER',
+    PASSWORD: 'REDIS_PASSWORD',
+  },
 } as const;

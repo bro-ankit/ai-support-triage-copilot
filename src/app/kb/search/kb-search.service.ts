@@ -6,6 +6,7 @@ import type { IAiClient } from '../../../ai/ai.interface';
 import { TrackAiUsage } from '../../../metrics/track-ai-usage.decorator';
 import type { KbChunkSelect } from '../../../schema/kb-chunks.schema';
 import { KbChunkRepository } from '../repositories/kb-chunk.repository';
+import { KbSearchCacheService } from './kb-search-cache.service';
 import { KbRerankerService } from './kb-reranker.service';
 import { RrfUtil } from './rrf.util';
 import { SEARCH_DEFAULTS } from './kb-search.constants';
@@ -17,7 +18,8 @@ export class KbSearchService {
     @Inject(AI_CLIENT) private readonly aiClient: IAiClient,
     private readonly kbChunkRepository: KbChunkRepository,
     private readonly kbRerankerService: KbRerankerService,
-  ) { }
+    private readonly kbSearchCacheService: KbSearchCacheService,
+  ) {}
 
   @TrackAiUsage('EMBEDDING')
   async search(query: string): Promise<KbChunkSelect[]> {
@@ -25,6 +27,15 @@ export class KbSearchService {
 
     const embedding = await this.aiClient.generateEmbedding(query);
 
+    const cached = await this.kbSearchCacheService.findSimilar(embedding);
+    if (cached) return cached;
+
+    const results = await this.hybridSearch(query, embedding);
+    await this.kbSearchCacheService.store(embedding, results);
+    return results;
+  }
+
+  private async hybridSearch(query: string, embedding: number[]): Promise<KbChunkSelect[]> {
     const [vectorIds, lexicalIds] = await Promise.all([
       this.kbChunkRepository.findSimilarIds(embedding, SEARCH_DEFAULTS.CANDIDATE_K, SEARCH_DEFAULTS.MAX_DISTANCE),
       this.kbChunkRepository.findByLexical(query, SEARCH_DEFAULTS.CANDIDATE_K),
