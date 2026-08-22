@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { InjectionHeuristicUtil } from '../../../../ai/injection-heuristic.util';
 import type { TicketSelect } from '../../../../schema/tickets.schema';
 import { ClassifyTicketAgent } from '../../agents/classify-ticket.agent';
 import { TicketClassificationRepository } from '../../repositories/ticket-classification.repository';
@@ -17,6 +18,10 @@ export class TicketClassificationStepService {
 
   async run(ticket: TicketSelect, attachmentText: string): Promise<void> {
     this.logger.debug({ ticketId: ticket.id }, 'Running ticket classification step');
+
+    if (ticket.description && InjectionHeuristicUtil.looksLikeInjectionAttempt(ticket.description)) {
+      this.logger.warn({ ticketId: ticket.id }, 'Possible prompt injection attempt detected in ticket description');
+    }
 
     try {
       const classification = await this.classifyTicketAgent.classify(ticket, attachmentText);

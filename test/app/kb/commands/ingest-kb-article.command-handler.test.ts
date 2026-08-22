@@ -101,5 +101,30 @@ describe('IngestKbArticleCommandHandler Unit Test', () => {
         expect(result).toEqual({ id: INSERTED_ARTICLE.id, title: REQUEST.title, chunkCount: 2 });
       });
     });
+
+    describe('When the request content contains hidden zero-width characters', () => {
+      test('Then it strips them before chunking, embedding, and persisting the article', async () => {
+        const zeroWidthSpace = String.fromCharCode(0x200b);
+        const dirtyContent = `${PARAGRAPH_ONE}${zeroWidthSpace}`;
+        const request = mockIngestKbArticleRequestDto({ rawContent: dirtyContent });
+        const insertedArticle = mockKbArticleSelect({
+          title: request.title,
+          sourceType: request.sourceType,
+          rawContent: PARAGRAPH_ONE,
+        });
+        kbArticleRepository.insert.mockResolvedValue(insertedArticle);
+        aiClient.generateEmbedding.mockResolvedValue(EMBEDDING_ONE);
+
+        await sut.execute(new IngestKbArticleCommand(request));
+
+        expect(kbArticleRepository.insert).toHaveBeenCalledWith({
+          id: expect.any(String),
+          title: request.title,
+          sourceType: request.sourceType,
+          rawContent: PARAGRAPH_ONE,
+        });
+        expect(aiClient.generateEmbedding).toHaveBeenCalledWith(PARAGRAPH_ONE);
+      });
+    });
   });
 });

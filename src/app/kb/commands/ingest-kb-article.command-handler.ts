@@ -12,6 +12,7 @@ import { DrizzleTransactionService } from '../../../database/drizzle-transaction
 import { TrackAiUsage } from '../../../metrics/track-ai-usage.decorator';
 import { IngestKbArticleResponseDto } from '../dto/ingest-kb-article-response.dto';
 import { KbChunkingUtil } from '../helpers/kb-chunking.util';
+import { TextSanitizerUtil } from '../helpers/text-sanitizer.util';
 import { KbArticleRepository } from '../repositories/kb-article.repository';
 import { KbChunkRepository } from '../repositories/kb-chunk.repository';
 import { IngestKbArticleCommand } from './ingest-kb-article.command';
@@ -31,7 +32,8 @@ export class IngestKbArticleCommandHandler
   @TrackAiUsage('EMBEDDING')
   async execute(command: IngestKbArticleCommand): Promise<IngestKbArticleResponseDto> {
     const { dto } = command;
-    const chunks = KbChunkingUtil.chunkArticle(dto.rawContent);
+    const sanitizedContent = TextSanitizerUtil.stripHiddenCharacters(dto.rawContent);
+    const chunks = KbChunkingUtil.chunkArticle(sanitizedContent);
 
     this.logger.info({ title: dto.title, chunkCount: chunks.length }, 'Ingesting KB article');
 
@@ -47,7 +49,7 @@ export class IngestKbArticleCommandHandler
         id: articleId,
         title: dto.title,
         sourceType: dto.sourceType,
-        rawContent: dto.rawContent,
+        rawContent: sanitizedContent,
       });
 
       await this.kbChunkRepository.insertMany(

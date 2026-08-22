@@ -34,7 +34,7 @@ export type TokenUsage = {
 };
 
 export interface IAiClient {
-  generateStructured(prompt: string, schema: AiResponseSchema): Promise<unknown>;
+  generateStructured(systemPrompt: string, userContent: string, schema: AiResponseSchema): Promise<unknown>;
   generateEmbedding(text: string): Promise<number[]>;
   generateText(systemPrompt: string, userMessage: string): Promise<string>;
   generateWithTools(systemPrompt: string, history: AgentMessage[], tools: AgentTool[]): Promise<AgentTurnResult>;

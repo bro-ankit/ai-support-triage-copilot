@@ -67,11 +67,12 @@ export class GeminiClient implements IAiClient {
     this.embeddingModel = config.get<string>(ENV_VARIABLES.GEMINI.EMBEDDING_MODEL, GEMINI_MODEL_DEFAULTS.EMBEDDING);
   }
 
-  async generateStructured(prompt: string, schema: AiResponseSchema): Promise<unknown> {
+  async generateStructured(systemPrompt: string, userContent: string, schema: AiResponseSchema): Promise<unknown> {
     this.logger.info({ model: this.generationModel }, 'Sending structured generation request');
 
     const model = this.client.getGenerativeModel({
       model: this.generationModel,
+      systemInstruction: systemPrompt,
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: this.toGeminiSchema(schema),
@@ -82,7 +83,7 @@ export class GeminiClient implements IAiClient {
     let rawText: string;
     let usage: TokenUsage;
     try {
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent(userContent);
       rawText = result.response.text();
       usage = this.extractUsage(result.response.usageMetadata);
       this.logger.debug({ usage }, 'Structured generation token usage');

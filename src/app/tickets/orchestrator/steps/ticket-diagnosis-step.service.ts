@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { InjectionHeuristicUtil } from '../../../../ai/injection-heuristic.util';
 import type { KbChunkSelect } from '../../../../schema/kb-chunks.schema';
 import type { TicketSelect } from '../../../../schema/tickets.schema';
 import { KbSearchService } from '../../../kb/search/kb-search.service';
@@ -40,6 +41,16 @@ export class TicketDiagnosisStepService {
 
     this.logger.debug({ ticketId: ticket.id, chunkCount: kbChunks.length }, 'KB findings retrieved, diagnosing');
     const retrievedChunkIds = kbChunks.map((c) => c.id);
+
+    const suspiciousChunkIds = kbChunks
+      .filter((c) => InjectionHeuristicUtil.looksLikeInjectionAttempt(c.content))
+      .map((c) => c.id);
+    if (suspiciousChunkIds.length > 0) {
+      this.logger.warn(
+        { ticketId: ticket.id, suspiciousChunkIds },
+        'Possible prompt injection attempt detected in retrieved KB content',
+      );
+    }
 
     this.throwIfAborted(ticket.id, abortSignal);
     const diagnosis = await this.diagnoseSafely(ticket, kbChunks);

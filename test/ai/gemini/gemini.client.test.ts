@@ -99,11 +99,12 @@ describe('GeminiClient Unit Test', () => {
           response: { text: () => JSON.stringify(PARSED_RESPONSE) },
         });
 
-        const result = await sut.generateStructured(PROMPT, INPUT_SCHEMA);
+        const result = await sut.generateStructured(SYSTEM_PROMPT, PROMPT, INPUT_SCHEMA);
 
         expect(result).toEqual(PARSED_RESPONSE);
         expect(geminiClient.getGenerativeModel).toHaveBeenCalledWith({
           model: 'gemini-3.5-flash',
+          systemInstruction: SYSTEM_PROMPT,
           generationConfig: {
             responseMimeType: 'application/json',
             responseSchema: EXPECTED_GEMINI_SCHEMA,
@@ -118,7 +119,7 @@ describe('GeminiClient Unit Test', () => {
         mockGenerateContent.mockRejectedValueOnce(new Error('Connection timeout'));
 
         await AssertUtils.assertError(
-          () => sut.generateStructured(PROMPT, INPUT_SCHEMA),
+          () => sut.generateStructured(SYSTEM_PROMPT, PROMPT, INPUT_SCHEMA),
           'Gemini API call failed',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
@@ -132,7 +133,7 @@ describe('GeminiClient Unit Test', () => {
         });
 
         await AssertUtils.assertError(
-          () => sut.generateStructured(PROMPT, INPUT_SCHEMA),
+          () => sut.generateStructured(SYSTEM_PROMPT, PROMPT, INPUT_SCHEMA),
           'Gemini returned non-JSON response',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
