@@ -4,13 +4,14 @@ import { SCHEMA_FIELD_TYPE } from 'redis';
 import type { ICacheClient } from '../cache.interface';
 import type { NearestVectorMatch, VectorIndexOptions } from '../cache.types';
 import { REDIS_CLIENT } from './redis-cache.constants';
+import { RedisTagEscapeUtil } from './redis-tag-escape.util';
 import type { RedisCacheClient } from './redis-cache.types';
 
 const INDEX_ALREADY_EXISTS_ERROR = 'Index already exists';
 
 @Injectable()
 export class RedisCacheService implements ICacheClient {
-  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: RedisCacheClient) { }
+  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: RedisCacheClient) {}
 
   async increment(key: string): Promise<number> {
     return this.redisClient.incr(key);
@@ -23,9 +24,14 @@ export class RedisCacheService implements ICacheClient {
 
   async createVectorIndex(options: VectorIndexOptions): Promise<void> {
     try {
+      const tagFieldsSchema = Object.fromEntries(
+        (options.tagFields ?? []).map((field) => [`$.${field}`, { type: SCHEMA_FIELD_TYPE.TAG, AS: field }]),
+      );
+
       await this.redisClient.ft.create(
         options.indexName,
         {
+          ...tagFieldsSchema,
           [`$.${options.vectorField}`]: {
             type: SCHEMA_FIELD_TYPE.VECTOR,
             AS: options.vectorField,
@@ -52,8 +58,14 @@ export class RedisCacheService implements ICacheClient {
     indexName: string,
     vectorField: string,
     vector: number[],
+    filter?: Record<string, string>,
   ): Promise<NearestVectorMatch<T> | undefined> {
-    const result = await this.redisClient.ft.search(indexName, `*=>[KNN 1 @${vectorField} $vec AS distance]`, {
+    const filterClause = Object.entries(filter ?? {})
+      .map(([field, value]) => `@${field}:{${RedisTagEscapeUtil.escape(value)}}`)
+      .join(' ');
+    const query = `${filterClause || '*'}=>[KNN 1 @${vectorField} $vec AS distance]`;
+
+    const result = await this.redisClient.ft.search(indexName, query, {
       PARAMS: { vec: Buffer.from(new Float32Array(vector).buffer) },
       SORTBY: 'distance',
       DIALECT: 2,

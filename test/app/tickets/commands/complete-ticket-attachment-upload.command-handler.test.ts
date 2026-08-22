@@ -7,9 +7,10 @@ import type { IAiClient } from '../../../../src/ai/ai.interface';
 import { CompleteTicketAttachmentUploadCommand } from '../../../../src/app/tickets/commands/complete-ticket-attachment-upload.command';
 import { CompleteTicketAttachmentUploadCommandHandler } from '../../../../src/app/tickets/commands/complete-ticket-attachment-upload.command-handler';
 import { TicketAttachmentRepository } from '../../../../src/app/tickets/repositories/ticket-attachment.repository';
+import { TicketRepository } from '../../../../src/app/tickets/repositories/ticket.repository';
 import type { IStorageClient } from '../../../../src/storage/storage.interface';
 import { STORAGE_CLIENT } from '../../../../src/storage/storage.constants';
-import { mockTicketAttachmentSelect } from '../../../__mocks__';
+import { mockTicketAttachmentSelect, mockTicketSelect } from '../../../__mocks__';
 import { AssertUtils } from '../../../utils/assert.utils';
 
 const TICKET_ID = randomUUID();
@@ -23,6 +24,7 @@ describe('CompleteTicketAttachmentUploadCommandHandler Unit Test', () => {
   let aiClient: jest.Mocked<IAiClient>;
   let storageClient: jest.Mocked<IStorageClient>;
   let ticketAttachmentRepository: jest.Mocked<TicketAttachmentRepository>;
+  let ticketRepository: jest.Mocked<TicketRepository>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(CompleteTicketAttachmentUploadCommandHandler).compile();
@@ -31,10 +33,12 @@ describe('CompleteTicketAttachmentUploadCommandHandler Unit Test', () => {
     aiClient = unitRef.get(AI_CLIENT);
     storageClient = unitRef.get(STORAGE_CLIENT);
     ticketAttachmentRepository = unitRef.get(TicketAttachmentRepository);
+    ticketRepository = unitRef.get(TicketRepository);
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
+    ticketRepository.findById.mockResolvedValue(mockTicketSelect({ id: TICKET_ID }));
   });
 
   describe('Given execute', () => {

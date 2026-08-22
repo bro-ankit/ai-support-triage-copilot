@@ -15,6 +15,7 @@ export type TicketPriority = (typeof TICKET_PRIORITIES)[number];
 
 export const ticketsTable = pgTable('tickets', {
   id: uuid('id').$type<UUID>().primaryKey(),
+  tenantId: uuid('tenant_id').$type<UUID>().notNull(),
   subject: text('subject').notNull(),
   description: text('description'),
   status: text('status').$type<TicketStatus>().notNull().default('open'),

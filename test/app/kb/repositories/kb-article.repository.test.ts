@@ -4,7 +4,7 @@ import { KbArticleRepository } from '../../../../src/app/kb/repositories/kb-arti
 import type { KbArticleInsert } from '../../../../src/schema/kb-articles.schema';
 import { kbArticlesTable } from '../../../../src/schema/kb-articles.schema';
 import { DrizzleTestEnvironment } from '../../../helpers/drizzle-test-environment';
-import { mockKbArticleInsert } from '../../../__mocks__';
+import { MOCK_TENANT_ID, mockKbArticleInsert } from '../../../__mocks__';
 
 describe('KbArticleRepository IT', () => {
   let sut: KbArticleRepository;
@@ -23,17 +23,19 @@ describe('KbArticleRepository IT', () => {
     await env.db.delete(kbArticlesTable);
   });
 
-  const seed = (overrides: Partial<KbArticleInsert> = {}) => sut.insert(mockKbArticleInsert(overrides));
+  const seed = (overrides: Partial<KbArticleInsert> = {}) =>
+    env.withTenant(MOCK_TENANT_ID, () => sut.insert(mockKbArticleInsert(overrides)));
 
   describe('Given insert', () => {
     describe('When called with a valid article', () => {
       test('Then it persists the article and returns it with the given id and generated timestamps', async () => {
         const data = mockKbArticleInsert({ title: 'OAuth refresh-token failures' });
 
-        const result = await sut.insert(data);
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.insert(data));
 
         expect(result).toEqual({
           id: data.id,
+          tenantId: MOCK_TENANT_ID,
           title: data.title,
           sourceType: data.sourceType,
           rawContent: data.rawContent,
@@ -49,7 +51,7 @@ describe('KbArticleRepository IT', () => {
       test('Then it returns that article', async () => {
         const inserted = await seed({ title: 'S3 upload timeouts' });
 
-        const result = await sut.findById(inserted.id);
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.findById(inserted.id));
 
         expect(result).toEqual(inserted);
       });
@@ -57,7 +59,17 @@ describe('KbArticleRepository IT', () => {
 
     describe('When the article does not exist', () => {
       test('Then it returns undefined', async () => {
-        const result = await sut.findById(randomUUID());
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.findById(randomUUID()));
+
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe('When the article belongs to a different tenant', () => {
+      test('Then it returns undefined, never leaking another tenant\'s article', async () => {
+        const inserted = await seed({ title: 'Tenant A only' });
+
+        const result = await env.withTenant(randomUUID(), () => sut.findById(inserted.id));
 
         expect(result).toBeUndefined();
       });

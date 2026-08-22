@@ -1,3 +1,5 @@
+import type { UUID } from 'node:crypto';
+
 import { type ModuleMetadata, type Provider } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
@@ -6,6 +8,7 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { LoggerModule } from 'nestjs-pino';
 import { Pool } from 'pg';
 
+import { TenantContextService } from '../../src/auth/tenant-context.service';
 import { DRIZZLE_DB } from '../../src/database/database.constants';
 import type { DrizzleDb } from '../../src/database/database.module';
 import { DrizzleTransactionContext } from '../../src/database/drizzle-transaction.context';
@@ -42,6 +45,7 @@ export class DrizzleTestEnvironment {
         { provide: DRIZZLE_DB, useValue: this.db },
         DrizzleTransactionContext,
         DrizzleTransactionService,
+        TenantContextService,
         ...providers,
       ],
     }).compile();
@@ -49,6 +53,10 @@ export class DrizzleTestEnvironment {
 
   async stop(): Promise<void> {
     await this.pool.end();
-    await this.module.close();
+    await this.module?.close();
+  }
+
+  withTenant<T>(tenantId: UUID, fn: () => Promise<T>): Promise<T> {
+    return this.module.get(TenantContextService).run(tenantId, fn);
   }
 }

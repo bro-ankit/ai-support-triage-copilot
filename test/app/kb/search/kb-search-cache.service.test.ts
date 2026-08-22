@@ -3,9 +3,10 @@ import { TestBed } from '@automock/jest';
 import { EMBEDDING_DIMENSIONS } from '../../../../src/ai/gemini/gemini.constants';
 import { KbSearchCacheService } from '../../../../src/app/kb/search/kb-search-cache.service';
 import { KB_SEARCH_CACHE_DEFAULTS } from '../../../../src/app/kb/search/kb-search-cache.constants';
+import { TenantContextService } from '../../../../src/auth/tenant-context.service';
 import { CACHE_CLIENT } from '../../../../src/cache/cache.constants';
 import type { ICacheClient } from '../../../../src/cache/cache.interface';
-import { mockKbChunkSelect } from '../../../__mocks__';
+import { MOCK_TENANT_ID, mockKbChunkSelect } from '../../../__mocks__';
 
 const EMBEDDING = [0.1, 0.2, 0.3];
 const RESULTS = [mockKbChunkSelect()];
@@ -13,6 +14,7 @@ const RESULTS = [mockKbChunkSelect()];
 describe('KbSearchCacheService Unit Test', () => {
   let sut: KbSearchCacheService;
   let cacheClient: jest.Mocked<ICacheClient>;
+  let tenantContext: jest.Mocked<TenantContextService>;
 
   beforeAll(() => {
     const mockedCacheClient: jest.Mocked<ICacheClient> = {
@@ -30,10 +32,12 @@ describe('KbSearchCacheService Unit Test', () => {
 
     sut = unit;
     cacheClient = unitRef.get(CACHE_CLIENT);
+    tenantContext = unitRef.get(TenantContextService);
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
+    tenantContext.getTenantId.mockReturnValue(MOCK_TENANT_ID);
   });
 
   describe('Given onModuleInit', () => {
@@ -47,6 +51,7 @@ describe('KbSearchCacheService Unit Test', () => {
           vectorField: 'embedding',
           dimensions: EMBEDDING_DIMENSIONS,
           distanceMetric: 'COSINE',
+          tagFields: [KB_SEARCH_CACHE_DEFAULTS.TENANT_FIELD],
         });
       });
     });
@@ -66,6 +71,7 @@ describe('KbSearchCacheService Unit Test', () => {
           KB_SEARCH_CACHE_DEFAULTS.INDEX_NAME,
           'embedding',
           EMBEDDING,
+          { [KB_SEARCH_CACHE_DEFAULTS.TENANT_FIELD]: MOCK_TENANT_ID },
         );
         expect(cacheClient.increment).toHaveBeenCalledWith(KB_SEARCH_CACHE_DEFAULTS.HITS_KEY);
         expect(cacheClient.increment).not.toHaveBeenCalledWith(KB_SEARCH_CACHE_DEFAULTS.MISSES_KEY);
@@ -107,7 +113,7 @@ describe('KbSearchCacheService Unit Test', () => {
         expect(cacheClient.store).toHaveBeenCalledTimes(1);
         const [key, value, ttlSeconds] = cacheClient.store.mock.calls[0];
         expect(key.startsWith(KB_SEARCH_CACHE_DEFAULTS.KEY_PREFIX)).toBe(true);
-        expect(value).toEqual({ embedding: EMBEDDING, results: RESULTS });
+        expect(value).toEqual({ tenantId: MOCK_TENANT_ID, embedding: EMBEDDING, results: RESULTS });
         expect(ttlSeconds).toBe(KB_SEARCH_CACHE_DEFAULTS.TTL_SECONDS);
       });
     });

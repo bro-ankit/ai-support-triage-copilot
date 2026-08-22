@@ -5,7 +5,7 @@ import { ticketAttachmentsTable } from '../../../../src/schema/ticket-attachment
 import { ticketsTable } from '../../../../src/schema/tickets.schema';
 import type { TicketInsert } from '../../../../src/schema/tickets.schema';
 import { DrizzleTestEnvironment } from '../../../helpers/drizzle-test-environment';
-import { mockTicketAttachmentInsert, mockTicketInsert } from '../../../__mocks__';
+import { MOCK_TENANT_ID, mockTicketAttachmentInsert, mockTicketInsert } from '../../../__mocks__';
 
 describe('TicketRepository IT', () => {
   let sut: TicketRepository;
@@ -24,17 +24,19 @@ describe('TicketRepository IT', () => {
     await env.db.delete(ticketsTable);
   });
 
-  const seed = (overrides: Partial<TicketInsert> = {}) => sut.insert(mockTicketInsert(overrides));
+  const seed = (overrides: Partial<TicketInsert> = {}) =>
+    env.withTenant(MOCK_TENANT_ID, () => sut.insert(mockTicketInsert(overrides)));
 
   describe('Given insert', () => {
     describe('When called with a valid ticket', () => {
       test('Then it persists the ticket and returns it with the given id, defaulted status, and generated timestamps', async () => {
         const data = mockTicketInsert({ subject: 'Voice note upload never completes' });
 
-        const result = await sut.insert(data);
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.insert(data));
 
         expect(result).toEqual({
           id: data.id,
+          tenantId: MOCK_TENANT_ID,
           subject: data.subject,
           description: data.description,
           status: 'open',
@@ -51,7 +53,7 @@ describe('TicketRepository IT', () => {
       test('Then it returns the ticket without an attachments field', async () => {
         const ticket = await seed({ subject: 'Search returns no results' });
 
-        const result = await sut.findById(ticket.id);
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.findById(ticket.id));
 
         expect(result).toEqual(ticket);
       });
@@ -65,7 +67,7 @@ describe('TicketRepository IT', () => {
           .values(mockTicketAttachmentInsert({ ticketId: ticket.id }))
           .returning();
 
-        const result = await sut.findById(ticket.id, { attachments: true });
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.findById(ticket.id, { attachments: true }));
 
         expect(result).toEqual({ ...ticket, attachments: [attachment] });
       });
@@ -75,7 +77,7 @@ describe('TicketRepository IT', () => {
       test('Then it returns the ticket with an empty attachments array', async () => {
         const ticket = await seed({ subject: 'No attachments' });
 
-        const result = await sut.findById(ticket.id, { attachments: true });
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.findById(ticket.id, { attachments: true }));
 
         expect(result).toEqual({ ...ticket, attachments: [] });
       });
@@ -83,7 +85,18 @@ describe('TicketRepository IT', () => {
 
     describe('When the ticket does not exist', () => {
       test('Then it returns undefined', async () => {
-        const result = await sut.findById(randomUUID());
+        const result = await env.withTenant(MOCK_TENANT_ID, () => sut.findById(randomUUID()));
+
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe('When the ticket belongs to a different tenant', () => {
+      test('Then it returns undefined, never leaking another tenant\'s ticket', async () => {
+        const ticket = await seed({ subject: 'Tenant A only' });
+        const otherTenantId = randomUUID();
+
+        const result = await env.withTenant(otherTenantId, () => sut.findById(ticket.id));
 
         expect(result).toBeUndefined();
       });

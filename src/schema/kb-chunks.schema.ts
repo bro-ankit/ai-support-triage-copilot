@@ -9,6 +9,7 @@ import { VectorTypeUtil } from './vector.util';
 
 export const kbChunksTable = pgTable('kb_chunks', {
   id: uuid('id').$type<UUID>().primaryKey(),
+  tenantId: uuid('tenant_id').$type<UUID>().notNull(),
   articleId: uuid('article_id')
     .$type<UUID>()
     .notNull()

@@ -4,6 +4,7 @@ export type VectorIndexOptions = {
   vectorField: string;
   dimensions: number;
   distanceMetric: 'COSINE' | 'L2' | 'IP';
+  tagFields?: string[];
 };
 
 export type NearestVectorMatch<T> = {

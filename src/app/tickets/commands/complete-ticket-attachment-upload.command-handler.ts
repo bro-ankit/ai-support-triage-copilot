@@ -12,6 +12,7 @@ import { TicketAttachmentResponseDto } from '../dto/ticket-response.dto';
 import { STORAGE_CLIENT } from '../../../storage/storage.constants';
 import type { IStorageClient } from '../../../storage/storage.interface';
 import { TicketAttachmentRepository } from '../repositories/ticket-attachment.repository';
+import { TicketRepository } from '../repositories/ticket.repository';
 import { TICKETS_ERRORS } from '../tickets.constants';
 
 @CommandHandler(CompleteTicketAttachmentUploadCommand)
@@ -22,10 +23,14 @@ export class CompleteTicketAttachmentUploadCommandHandler
     @Inject(AI_CLIENT) private readonly aiClient: IAiClient,
     @Inject(STORAGE_CLIENT) private readonly storageClient: IStorageClient,
     private readonly ticketAttachmentRepository: TicketAttachmentRepository,
+    private readonly ticketRepository: TicketRepository,
   ) { }
 
   async execute(command: CompleteTicketAttachmentUploadCommand): Promise<TicketAttachmentResponseDto> {
     const { ticketId, attachmentId } = command;
+
+    const ticket = await this.ticketRepository.findById(ticketId);
+    if (!ticket) throw new NotFoundException(TICKETS_ERRORS.TICKET_NOT_FOUND(ticketId));
 
     const attachment = await this.ticketAttachmentRepository.findById(attachmentId);
     if (!attachment || attachment.ticketId !== ticketId) {

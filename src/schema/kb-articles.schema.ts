@@ -7,6 +7,7 @@ export type KbSourceType = (typeof KB_SOURCE_TYPES)[number];
 
 export const kbArticlesTable = pgTable('kb_articles', {
   id: uuid('id').$type<UUID>().primaryKey(),
+  tenantId: uuid('tenant_id').$type<UUID>().notNull(),
   title: text('title').notNull(),
   sourceType: text('source_type').$type<KbSourceType>().notNull(),
   rawContent: text('raw_content').notNull(),

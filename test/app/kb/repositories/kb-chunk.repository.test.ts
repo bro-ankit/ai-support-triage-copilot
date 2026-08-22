@@ -6,7 +6,7 @@ import type { KbChunkToInsert } from '../../../../src/app/kb/repositories/kb-chu
 import { kbArticlesTable } from '../../../../src/schema/kb-articles.schema';
 import { kbChunksTable } from '../../../../src/schema/kb-chunks.schema';
 import { DrizzleTestEnvironment } from '../../../helpers/drizzle-test-environment';
-import { mockKbArticleInsert, mockKbChunkToInsert } from '../../../__mocks__';
+import { MOCK_TENANT_ID, mockKbArticleInsert, mockKbChunkToInsert } from '../../../__mocks__';
 
 const embeddingOf = (fillValue: number): number[] => new Array(EMBEDDING_DIMENSIONS).fill(fillValue);
 
@@ -36,9 +36,11 @@ describe('KbChunkRepository IT', () => {
     articleId = article.id;
   });
 
+  const withTenant = <T>(fn: () => Promise<T>) => env.withTenant(MOCK_TENANT_ID, fn);
+
   const seed = async (overrides: Partial<KbChunkToInsert> = {}): Promise<KbChunkToInsert> => {
     const chunk = mockKbChunkToInsert({ articleId, ...overrides });
-    await sut.insertMany([chunk]);
+    await withTenant(() => sut.insertMany([chunk]));
     return chunk;
   };
 
@@ -51,9 +53,9 @@ describe('KbChunkRepository IT', () => {
   describe('Given insertMany', () => {
     describe('When called with an empty array', () => {
       test('Then it does not insert anything', async () => {
-        await sut.insertMany([]);
+        await withTenant(() => sut.insertMany([]));
 
-        const ids = await sut.findByLexical('anything', 10);
+        const ids = await withTenant(() => sut.findByLexical('anything', 10));
         expect(ids).toEqual([]);
       });
     });
@@ -63,10 +65,10 @@ describe('KbChunkRepository IT', () => {
         const target = await seed({ content: 'Webhook retries must be idempotent.' });
         await seed({ chunkIndex: 1, content: 'Unrelated billing export content.' });
 
-        const ids = await sut.findByLexical('idempotent', 10);
+        const ids = await withTenant(() => sut.findByLexical('idempotent', 10));
 
         expect(ids).toHaveLength(1);
-        const [chunk] = await sut.findByIds(ids);
+        const [chunk] = await withTenant(() => sut.findByIds(ids));
         expect(chunk).toEqual(expectedRow(target, "'idempot':5 'must':3 'retri':2 'webhook':1"));
       });
     });
@@ -78,9 +80,9 @@ describe('KbChunkRepository IT', () => {
           mockKbChunkToInsert({ articleId, chunkIndex: i, content: `chunk number ${i}` }),
         );
 
-        await sut.insertMany(chunks);
+        await withTenant(() => sut.insertMany(chunks));
 
-        const ids = await sut.findSimilarIds(embeddingOf(0.1), chunkCount + 10, 2);
+        const ids = await withTenant(() => sut.findSimilarIds(embeddingOf(0.1), chunkCount + 10, 2));
         expect(ids).toHaveLength(chunkCount);
       });
     });
@@ -92,10 +94,10 @@ describe('KbChunkRepository IT', () => {
         const near = await seed({ content: 'near', tokenCount: 1, embedding: embeddingOf(0.1) });
         await seed({ chunkIndex: 1, content: 'far', embedding: orthogonalEmbedding() });
 
-        const ids = await sut.findSimilarIds(embeddingOf(0.1), 10, 0.01);
+        const ids = await withTenant(() => sut.findSimilarIds(embeddingOf(0.1), 10, 0.01));
 
         expect(ids).toHaveLength(1);
-        const [chunk] = await sut.findByIds(ids);
+        const [chunk] = await withTenant(() => sut.findByIds(ids));
         expect(chunk).toEqual(expectedRow(near));
       });
     });
@@ -106,7 +108,7 @@ describe('KbChunkRepository IT', () => {
       test('Then it returns an empty array', async () => {
         await seed({ content: 'Unrelated billing export content.' });
 
-        const ids = await sut.findByLexical('nonexistent-term', 10);
+        const ids = await withTenant(() => sut.findByLexical('nonexistent-term', 10));
 
         expect(ids).toEqual([]);
       });
@@ -116,7 +118,7 @@ describe('KbChunkRepository IT', () => {
   describe('Given findByIds', () => {
     describe('When called with an empty array', () => {
       test('Then it returns an empty array without querying the database', async () => {
-        const result = await sut.findByIds([]);
+        const result = await withTenant(() => sut.findByIds([]));
 
         expect(result).toEqual([]);
       });
@@ -126,7 +128,7 @@ describe('KbChunkRepository IT', () => {
       test('Then it returns the matching chunks', async () => {
         const target = await seed({ content: 'findByIds target' });
 
-        const result = await sut.findByIds([target.id]);
+        const result = await withTenant(() => sut.findByIds([target.id]));
 
         expect(result).toEqual([expectedRow(target)]);
       });
@@ -134,7 +136,17 @@ describe('KbChunkRepository IT', () => {
 
     describe('When called with an id that does not exist', () => {
       test('Then it omits that id from the result', async () => {
-        const result = await sut.findByIds([randomUUID()]);
+        const result = await withTenant(() => sut.findByIds([randomUUID()]));
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('When the chunk belongs to a different tenant', () => {
+      test('Then it omits that chunk from the result', async () => {
+        const target = await seed({ content: 'Tenant A only' });
+
+        const result = await env.withTenant(randomUUID(), () => sut.findByIds([target.id]));
 
         expect(result).toEqual([]);
       });
