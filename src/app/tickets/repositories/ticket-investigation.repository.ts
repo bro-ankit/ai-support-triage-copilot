@@ -37,4 +37,24 @@ export class TicketInvestigationRepository {
       .limit(1);
     return result;
   }
+
+  async findById(id: UUID): Promise<TicketInvestigationSelect | undefined> {
+    const client = this.txContext.getClient(this.db);
+    const [result] = await client
+      .select()
+      .from(ticketInvestigationsTable)
+      .where(eq(ticketInvestigationsTable.id, id))
+      .limit(1);
+    return result;
+  }
+
+  async updateStatus(id: UUID, status: TicketInvestigationSelect['status']): Promise<TicketInvestigationSelect> {
+    const client = this.txContext.getClient(this.db);
+    const [result] = await client
+      .update(ticketInvestigationsTable)
+      .set({ status })
+      .where(eq(ticketInvestigationsTable.id, id))
+      .returning();
+    return result;
+  }
 }

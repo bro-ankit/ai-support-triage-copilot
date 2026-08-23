@@ -1,0 +1,3 @@
+export const APPROVE_TICKET_ACTION_DEFAULTS = {
+  APPROVAL_TTL_MINUTES: 15,
+} as const;

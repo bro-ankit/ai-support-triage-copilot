@@ -11,6 +11,7 @@ import { TicketDiagnosisStepService } from './orchestrator/steps/ticket-diagnosi
 import { TicketInvestigationContextService } from './orchestrator/ticket-investigation-context.service';
 import { TicketInvestigationOrchestratorService } from './orchestrator/ticket-investigation-orchestrator.service';
 import { TICKET_QUERY_HANDLERS } from './queries';
+import { TicketActionApprovalRepository } from './repositories/ticket-action-approval.repository';
 import { TicketAttachmentRepository } from './repositories/ticket-attachment.repository';
 import { TicketClassificationRepository } from './repositories/ticket-classification.repository';
 import { TicketInvestigationRepository } from './repositories/ticket-investigation.repository';
@@ -24,6 +25,7 @@ import { TicketsController } from './tickets.controller';
     TicketAttachmentRepository,
     TicketClassificationRepository,
     TicketInvestigationRepository,
+    TicketActionApprovalRepository,
     ClassifyTicketAgent,
     DiagnoseTicketAgent,
     ProposeTicketActionAgent,

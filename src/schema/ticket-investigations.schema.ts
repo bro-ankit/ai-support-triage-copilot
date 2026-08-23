@@ -3,12 +3,18 @@ import type { UUID } from 'node:crypto';
 import { relations } from 'drizzle-orm';
 import { doublePrecision, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import { ticketActionApprovalsTable } from './ticket-action-approvals.schema';
 import { ticketsTable } from './tickets.schema';
 
 export const TICKET_PROPOSED_ACTIONS = ['refund', 'account_credit', 'escalation', 'reply_only'] as const;
 export type TicketProposedAction = (typeof TICKET_PROPOSED_ACTIONS)[number];
 
-export const TICKET_INVESTIGATION_STATUSES = ['completed', 'needs_review', 'failed'] as const;
+export const TICKET_INVESTIGATION_STATUSES = [
+  'completed',
+  'needs_review',
+  'failed',
+  'action_executed',
+] as const;
 export type TicketInvestigationStatus = (typeof TICKET_INVESTIGATION_STATUSES)[number];
 
 export const ticketInvestigationsTable = pgTable('ticket_investigations', {
@@ -29,6 +35,7 @@ export const ticketInvestigationsTable = pgTable('ticket_investigations', {
 export type TicketInvestigationSelect = typeof ticketInvestigationsTable.$inferSelect;
 export type TicketInvestigationInsert = typeof ticketInvestigationsTable.$inferInsert;
 
-export const TICKET_INVESTIGATIONS_RELATIONS = relations(ticketInvestigationsTable, ({ one }) => ({
+export const TICKET_INVESTIGATIONS_RELATIONS = relations(ticketInvestigationsTable, ({ one, many }) => ({
   ticket: one(ticketsTable, { fields: [ticketInvestigationsTable.ticketId], references: [ticketsTable.id] }),
+  approvals: many(ticketActionApprovalsTable),
 }));

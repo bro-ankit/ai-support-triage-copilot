@@ -7,8 +7,10 @@ import { Test } from '@nestjs/testing';
 import { Subject } from 'rxjs';
 import request from 'supertest';
 
+import { ApproveTicketActionCommand } from '../../../src/app/tickets/commands/approve-ticket-action.command';
 import { CompleteTicketAttachmentUploadCommand } from '../../../src/app/tickets/commands/complete-ticket-attachment-upload.command';
 import { CreateTicketCommand } from '../../../src/app/tickets/commands/create-ticket.command';
+import { ExecuteTicketActionCommand } from '../../../src/app/tickets/commands/execute-ticket-action.command';
 import { RequestTicketAttachmentUploadCommand } from '../../../src/app/tickets/commands/request-ticket-attachment-upload.command';
 import { TicketInvestigationProgressEvent } from '../../../src/app/tickets/events/ticket-investigation-progress.event';
 import { GetTicketQuery } from '../../../src/app/tickets/queries/get-ticket.query';
@@ -23,6 +25,7 @@ import {
   mockCreateTicketRequestDto,
   mockRequestAttachmentUploadRequestDto,
   mockRequestAttachmentUploadResponseDto,
+  mockTicketActionApprovalResponseDto,
   mockTicketAttachmentResponseDto,
   mockTicketInvestigationResponseDto,
   mockTicketResponseDto,
@@ -32,8 +35,10 @@ import { AssertUtils } from '../../utils/assert.utils';
 
 const TICKET_ID = randomUUID();
 const ATTACHMENT_ID = randomUUID();
+const INVESTIGATION_ID = randomUUID();
 
 const MCP_TOKEN = AuthMocks.createMockToken(AuthMocks.buildMockUser({ scopes: [AUTH_SCOPES.MCP] }));
+const APPROVE_ACTIONS_TOKEN = AuthMocks.createMockToken(AuthMocks.buildMockUser({ scopes: [AUTH_SCOPES.APPROVE_ACTIONS] }));
 const NO_SCOPE_TOKEN = AuthMocks.createMockToken(AuthMocks.buildMockUser({ scopes: [] }));
 
 describe('TicketsController Test', () => {
@@ -243,6 +248,74 @@ describe('TicketsController Test', () => {
           .expect(201);
 
         AssertUtils.assertSseEvents(response.text, [{ event: 'error', data: { message: 'Ticket not found' } }]);
+      });
+    });
+  });
+
+  describe('Given POST /tickets/:id/investigations/:investigationId/approvals endpoint', () => {
+    describe('When called with no bearer token', () => {
+      test('Then it rejects with 401 without executing the command', async () => {
+        await request(app.getHttpServer())
+          .post(`/tickets/${TICKET_ID}/investigations/${INVESTIGATION_ID}/approvals`)
+          .expect(401);
+        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('When called with a token that only holds the mcp scope', () => {
+      test('Then it rejects with 403, since an investigation-running caller must not approve its own proposed action', async () => {
+        await request(app.getHttpServer())
+          .post(`/tickets/${TICKET_ID}/investigations/${INVESTIGATION_ID}/approvals`)
+          .set('Authorization', `Bearer ${MCP_TOKEN}`)
+          .expect(403);
+        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('When called with a valid approve_actions-scoped token', () => {
+      test('Then it executes ApproveTicketActionCommand with the caller\'s userId and returns the approval', async () => {
+        const approval = mockTicketActionApprovalResponseDto({ ticketInvestigationId: INVESTIGATION_ID });
+        mockCommandBus.execute.mockResolvedValue(approval);
+
+        const response = await request(app.getHttpServer())
+          .post(`/tickets/${TICKET_ID}/investigations/${INVESTIGATION_ID}/approvals`)
+          .set('Authorization', `Bearer ${APPROVE_ACTIONS_TOKEN}`)
+          .expect(201);
+
+        expect(mockCommandBus.execute).toHaveBeenCalledWith(
+          new ApproveTicketActionCommand(TICKET_ID, INVESTIGATION_ID, 'test-user-id'),
+        );
+        expect(response.body).toEqual({
+          ...approval,
+          approvedAt: approval.approvedAt.toISOString(),
+          expiresAt: approval.expiresAt.toISOString(),
+        });
+      });
+    });
+  });
+
+  describe('Given POST /tickets/:id/investigations/:investigationId/execute endpoint', () => {
+    describe('When called with no bearer token', () => {
+      test('Then it rejects with 401 without executing the command', async () => {
+        await request(app.getHttpServer())
+          .post(`/tickets/${TICKET_ID}/investigations/${INVESTIGATION_ID}/execute`)
+          .expect(401);
+        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('When called with any validly authenticated token, since execution is gated by the approval record itself', () => {
+      test('Then it executes ExecuteTicketActionCommand and returns the updated investigation', async () => {
+        const investigation = mockTicketInvestigationResponseDto({ id: INVESTIGATION_ID, status: 'action_executed' });
+        mockCommandBus.execute.mockResolvedValue(investigation);
+
+        const response = await request(app.getHttpServer())
+          .post(`/tickets/${TICKET_ID}/investigations/${INVESTIGATION_ID}/execute`)
+          .set('Authorization', `Bearer ${NO_SCOPE_TOKEN}`)
+          .expect(201);
+
+        expect(mockCommandBus.execute).toHaveBeenCalledWith(new ExecuteTicketActionCommand(TICKET_ID, INVESTIGATION_ID));
+        expect(response.body).toEqual({ ...investigation, createdAt: investigation.createdAt.toISOString() });
       });
     });
   });

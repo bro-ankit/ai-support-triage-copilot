@@ -13,6 +13,8 @@ export { mockDiagnoseTicketResponse } from './tickets/mock-diagnose-ticket.respo
 export { mockProposeTicketActionResponse } from './tickets/mock-propose-ticket-action.response';
 export { mockRequestAttachmentUploadRequestDto } from './tickets/mock-request-attachment-upload-request.dto';
 export { mockRequestAttachmentUploadResponseDto } from './tickets/mock-request-attachment-upload-response.dto';
+export { mockTicketActionApprovalResponseDto } from './tickets/mock-ticket-action-approval-response.dto';
+export { mockTicketActionApprovalSelect } from './tickets/mock-ticket-action-approval.select';
 export { mockTicketAttachmentInsert } from './tickets/mock-ticket-attachment.insert';
 export { mockTicketAttachmentResponseDto } from './tickets/mock-ticket-attachment-response.dto';
 export { mockTicketAttachmentSelect } from './tickets/mock-ticket-attachment.select';

@@ -23,9 +23,7 @@ export class TicketInvestigationContextService {
     this.logger.debug({ ticketId }, 'Loading ticket investigation context');
 
     const result = await this.ticketRepository.findById(ticketId, { attachments: true } as const);
-    if (!result) {
-      throw new NotFoundException(TICKETS_ERRORS.TICKET_NOT_FOUND(ticketId));
-    }
+    if (!result) throw new NotFoundException(TICKETS_ERRORS.TICKET_NOT_FOUND(ticketId));
 
     const { attachments, ...ticket } = result;
 
