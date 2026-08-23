@@ -2,9 +2,11 @@ import type { UUID } from 'node:crypto';
 
 import { Body, Controller, Get, MessageEvent, Param, Post, Sse, SseSignal } from '@nestjs/common';
 import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 
+import { AUTH_SCOPES } from '../../auth/auth.constants';
+import { RequireAuth } from '../../auth/decorators/require-auth.decorator';
 import { SseProgressStreamUtil } from '../../sse/sse-progress-stream.util';
 import { CompleteTicketAttachmentUploadCommand } from './commands/complete-ticket-attachment-upload.command';
 import { CreateTicketCommand } from './commands/create-ticket.command';
@@ -19,6 +21,7 @@ import { TicketInvestigationProgressEvent } from './events/ticket-investigation-
 import { GetTicketQuery } from './queries/get-ticket.query';
 
 @ApiTags('tickets')
+@ApiBearerAuth()
 @Controller('tickets')
 export class TicketsController {
   constructor(
@@ -28,6 +31,7 @@ export class TicketsController {
   ) {}
 
   @Post()
+  @RequireAuth(AUTH_SCOPES.MCP)
   @ApiOperation({ summary: 'Create a support ticket' })
   @ApiOkResponse({ type: TicketResponseDto })
   create(@Body() dto: CreateTicketRequestDto): Promise<TicketResponseDto> {
@@ -35,6 +39,7 @@ export class TicketsController {
   }
 
   @Post(':id/attachments/presign')
+  @RequireAuth(AUTH_SCOPES.MCP)
   @ApiOperation({ summary: 'Request a presigned URL to upload a ticket attachment directly to object storage' })
   @ApiOkResponse({ type: RequestAttachmentUploadResponseDto })
   requestAttachmentUpload(
@@ -45,6 +50,7 @@ export class TicketsController {
   }
 
   @Post(':id/attachments/:attachmentId/complete')
+  @RequireAuth(AUTH_SCOPES.MCP)
   @ApiOperation({ summary: 'Signal that a direct-to-storage upload finished; triggers OCR/STT extraction' })
   @ApiOkResponse({ type: TicketAttachmentResponseDto })
   completeAttachmentUpload(
@@ -55,6 +61,7 @@ export class TicketsController {
   }
 
   @Get(':id')
+  @RequireAuth(AUTH_SCOPES.MCP)
   @ApiOperation({ summary: 'Get a ticket with its attachments and any extracted text' })
   @ApiOkResponse({ type: TicketResponseDto })
   getTicket(@Param('id') ticketId: UUID): Promise<TicketResponseDto> {
@@ -62,6 +69,7 @@ export class TicketsController {
   }
 
   @Post(':id/investigate')
+  @RequireAuth(AUTH_SCOPES.MCP)
   @Sse()
   @ApiOperation({
     summary:

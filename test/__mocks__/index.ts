@@ -1,3 +1,4 @@
+export { mockAuthorizedUserSelect } from './auth/mock-authorized-user.select';
 export { MOCK_TENANT_ID } from './mock-tenant-id';
 export { mockIngestKbArticleRequestDto } from './kb/mock-ingest-kb-article-request.dto';
 export { mockKbArticleInsert } from './kb/mock-kb-article.insert';

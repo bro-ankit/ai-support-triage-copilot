@@ -9,7 +9,7 @@ import {
 import type { Request } from 'express';
 import { Observable } from 'rxjs';
 
-import type { AuthenticatedClient } from './auth.types';
+import type { AuthenticatedUser } from './auth.types';
 import { TenantContextService } from './tenant-context.service';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class TenantContextInterceptor implements NestInterceptor {
   constructor(private readonly tenantContext: TenantContextService) { }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedClient }>();
+    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
     const tenantId = request.user?.tenantId ?? (request.auth?.extra?.['tenantId'] as UUID | undefined);
     if (!tenantId) return next.handle();
 

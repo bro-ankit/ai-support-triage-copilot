@@ -29,6 +29,13 @@
       "when": 1787365083753,
       "tag": "0003_violet_professor_monster",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787450000000,
+      "tag": "0004_rename_oauth_clients_to_authorized_users",
+      "breakpoints": true
     }
   ]
 }

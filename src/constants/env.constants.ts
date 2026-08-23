@@ -35,4 +35,8 @@ export const ENV_VARIABLES = {
     USER: 'REDIS_USER',
     PASSWORD: 'REDIS_PASSWORD',
   },
+  AUTH0: {
+    DOMAIN: 'AUTH0_DOMAIN',
+    AUDIENCE: 'AUTH0_AUDIENCE',
+  },
 } as const;

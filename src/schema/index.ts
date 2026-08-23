@@ -1,3 +1,4 @@
+export * from './authorized-users.schema';
 export * from './kb-articles.schema';
 export * from './kb-chunks.schema';
 export * from './metric-logs.schema';

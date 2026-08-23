@@ -41,7 +41,7 @@ describe('TenantContextInterceptor', () => {
   describe('Given a request with request.user.tenantId (Passport/REST route)', () => {
     describe('When intercept runs the downstream handler', () => {
       test('Then the tenant context is established from request.user.tenantId for that handler', async () => {
-        const user = AuthMocks.buildMockClient();
+        const user = AuthMocks.buildMockUser();
         const context = buildContext({ user });
         let seenTenantId: string | undefined;
 
@@ -73,7 +73,7 @@ describe('TenantContextInterceptor', () => {
   describe('Given a request with both request.user and request.auth present', () => {
     describe('When intercept runs the downstream handler', () => {
       test('Then request.user.tenantId takes precedence', async () => {
-        const user = AuthMocks.buildMockClient();
+        const user = AuthMocks.buildMockUser();
         const authTenantId = randomUUID();
         const context = buildContext({
           user,
