@@ -6,12 +6,14 @@ import { AppService } from './app.service';
 import { KbModule } from './app/kb/kb.module';
 import { TicketsModule } from './app/tickets/tickets.module';
 import { CoreInfraModule } from './core-infra.module';
+import { McpModule } from './mcp/mcp.module';
 
 @Module({
   imports: [
     CoreInfraModule,
     KbModule,
     TicketsModule,
+    McpModule,
     LoggerModule.forRoot({
       pinoHttp: {
         transport: process.env['NODE_ENV'] !== 'production' ? { target: 'pino-pretty' } : undefined,
