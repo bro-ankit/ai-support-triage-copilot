@@ -3,3 +3,10 @@ node_modules/
 dist/
 .env
 coverage/
+.venv-finetune/
+finetune/models/
+*.gguf
+
+
+.venv*
+.venv-*

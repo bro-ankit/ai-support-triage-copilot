@@ -1,0 +1,695 @@
+{
+  "summary": {
+    "testSetSize": 28,
+    "gemini": {
+      "categoryAccuracy": 0.7857142857142857,
+      "priorityAccuracy": 0.7142857142857143,
+      "bothCorrectAccuracy": 0.5714285714285714,
+      "avgLatencyMs": 2790.4285714285716,
+      "parseErrors": 0,
+      "totalCostUsd": 0.0028018999999999995
+    },
+    "fineTuned": {
+      "categoryAccuracy": 0.9642857142857143,
+      "priorityAccuracy": 1,
+      "bothCorrectAccuracy": 0.9642857142857143,
+      "avgLatencyMs": 701.7142857142857,
+      "parseErrors": 0,
+      "totalCostUsd": 0
+    }
+  },
+  "rows": [
+    {
+      "id": "5c3b0d33-3c46-4270-ad8a-312755847063",
+      "text": "hey guys, is there any way we can get a search bar in the templates section? we have like 40 different templates now and scrolling through all of them to find the one i need is getting kinda tedious. i mean i can just use cmd+f on the browser for now but a native search or tag system would be awesome. thanks!",
+      "expectedCategory": "other",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2323,
+        "rawOutput": "{\"category\": \"other\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.0000951
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 3113,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "30abdf5d-bb48-46c2-8f71-c36bda388744",
+      "text": "Hey guys, quick question. Is there any way to archive old projects so they don't show up in my main dashboard list? Right now my list is super cluttered and I'm just renaming them with 'Z_' at the front to push them to the bottom, but it's getting kind of annoying. Let me know if there's a setting I missed or if this is something you might add later. Thanks!",
+      "expectedCategory": "other",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2236,
+        "rawOutput": "{\n  \"category\": \"other\",\n  \"priority\": \"low\",\n  \"confidence\": 0.95\n}",
+        "costUsd": 0.0001079
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 788,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "0fda2be2-14d2-4374-9998-23ec0e914bca",
+      "text": "Hey quick question, is anyone else seeing a weird visual thing on the dashboard? Under the weekly stats, the green arrow for 'up' is actually pointing down, but the number itself is positive. It doesn't break anything and the data is correct when I export it, it just looks super confusing to my team. Not urgent at all, just thought I'd heads up you guys.",
+      "expectedCategory": "bug",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2108,
+        "rawOutput": "{\n  \"category\": \"bug\",\n  \"priority\": \"low\",\n  \"confidence\": 0.95\n}",
+        "costUsd": 0.0001058
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 1913,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "3ce34a5f-9191-492a-a618-384fbe8ac639",
+      "text": "Omg please help. I am completely locked out of my admin dashboard and I have a client presentation starting in exactly 15 minutes. It keeps telling me 'access denied' even though I am the owner of the account! My password reset link is not sending to my email either. This is extremely critical, if I can't show them the portal we are going to lose this $20k contract. Please bypass this or force a reset for me ASAP!!!!",
+      "expectedCategory": "account",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "account",
+        "priority": "high",
+        "confidence": 0.98,
+        "parseError": false,
+        "latencyMs": 4466,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"high\",\"confidence\":0.98}",
+        "costUsd": 0.0000973
+      },
+      "fineTuned": {
+        "category": "account",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 1094,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "103a34f3-203f-431f-8bd5-a84fb3285873",
+      "text": "Hi, I need to update the email address on my account to my new work email when you guys get a chance. I can still log in with the old one for now so no rush at all, just wanted to get it updated so my receipts go to the right place. Where do I do that?",
+      "expectedCategory": "account",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "account",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2282,
+        "rawOutput": "{\"category\": \"account\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.0000924
+      },
+      "fineTuned": {
+        "category": "account",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 635,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "8b8d1704-e675-4b55-b5fd-808d74102e67",
+      "text": "hey, i just signed up for the pro plan and i thought i used the promo code 'WELCOME10' but looking at my invoice i dont think it actually applied? its only a couple bucks so no big deal either way, just wanted to check if i did something wrong or if it can be added for next month. thanks!",
+      "expectedCategory": "billing",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "billing",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2115,
+        "rawOutput": "{\"category\": \"billing\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.0000942
+      },
+      "fineTuned": {
+        "category": "billing",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 670,
+        "rawOutput": "{\"category\":\"billing\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "c1c3c9ed-b8f4-4914-8ba6-bb3eef0e3f22",
+      "text": "Hey guys, I just looked at my invoice for this month (inv-90823) and I think I got double billed for the extra storage addon. I definitely cancelled that addon back in mid-October because we moved everything to our own AWS bucket. It's only like $15 so it's not the end of the world but can you guys refund that and make sure it doesn't charge me again next month? The rest of the platform is working fine, just want to get the billing sorted. Thanks!",
+      "expectedCategory": "billing",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "billing",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2356,
+        "rawOutput": "{\"category\": \"billing\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.0001068
+      },
+      "fineTuned": {
+        "category": "billing",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 310,
+        "rawOutput": "{\"category\":\"billing\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "7c5e8e63-519c-479a-bf68-8e47e78bf86d",
+      "text": "hey guys, love the tool so far! just wondering if there's any plans to let us custom reorder the sidebar folders? right now they just default to alphabetical order which is fine but i'd love to group my most used ones at the top without having to name them '1_folder', '2_folder' etc. just a nice to have!",
+      "expectedCategory": "other",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 1920,
+        "rawOutput": "{\"category\": \"other\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.0000963
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 329,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "26548958-001e-4d0b-b384-38bdc96184c2",
+      "text": "hey quick question, my latest invoice shows the discount as a separate line but it says $0.00 even though the total is correct (it looks like the discount was applied to the subtotal directly). just wanted to make sure it's just a visual bug and my promo code is still active for next month? thanks!",
+      "expectedCategory": "billing",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "billing",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2456,
+        "rawOutput": "{\"category\": \"billing\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.00009389999999999999
+      },
+      "fineTuned": {
+        "category": "billing",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 301,
+        "rawOutput": "{\"category\":\"billing\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "a0335a1a-8815-4f76-9316-cc64aaabd7cd",
+      "text": "hey there, so i uploaded a new profile pic to my account like two days ago but my dashboard is still showing the old one. it shows the new one in the settings page though. not a big deal at all, just kinda annoying to look at the old photo lol. is there a way to force it to update or is it just cached? thx!",
+      "expectedCategory": "account",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 3243,
+        "rawOutput": "{\"category\": \"bug\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.000096
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 533,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "b63c8d0a-903a-4f33-8a60-927fe75a37fe",
+      "text": "Hey, I've been trying to update the billing email on our account page so receipts go directly to our accounting department instead of my inbox. Every time I hit save it just spins and then nothing happens, no error message or anything. It's not a huge rush since I can just forward the invoices manually for now, but I'd really like to get this automated so I don't forget. Can you guys look into why the update button isn't working?",
+      "expectedCategory": "account",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 3226,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"low\",\"confidence\":0.95}",
+        "costUsd": 0.0000979
+      },
+      "fineTuned": {
+        "category": "account",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 557,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "fca16de1-894e-4be5-ae69-5956c7f30412",
+      "text": "hey, so the drag and drop area for uploading screenshots in the chat is acting up today. every time i drag a jpg in there, it pops up with a red box saying 'format not supported'. it's super annoying cuz i have to click the paperclip icon and browse my folders to upload it, which actually works fine. is this a known bug? i'm on chrome btw.",
+      "expectedCategory": "bug",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2013,
+        "rawOutput": "{\n  \"category\": \"bug\",\n  \"priority\": \"low\",\n  \"confidence\": 0.95\n}",
+        "costUsd": 0.00010609999999999999
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 651,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "8cc79251-2dcc-4fe9-b0f8-5c74182cd232",
+      "text": "hey, so i'm trying to use the bulk edit tool to change the status on about 20 of our client cards but every time i select them and hit save i get this error popup saying 'request failed with status code 500'. it works fine if i open each card up one by one and change them manually, but doing that for dozens of clients is a massive pain in the ass. is the bulk editor down today or something?",
+      "expectedCategory": "bug",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "bug",
+        "priority": "medium",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2029,
+        "rawOutput": "{\"category\": \"bug\", \"priority\": \"medium\", \"confidence\": 0.95}",
+        "costUsd": 0.0001017
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 434,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "2c2ada97-f5ea-4902-8cf2-77c7f4110d1e",
+      "text": "Hey, is there any way to make the dark mode auto-switch based on my system settings? Right now I have to manually go into appearance and click it every evening when my Mac switches over. It's not the end of the world, I can just click it, but it would be super nice if it just synced up automatically like most other apps do. Let me know if I'm missing a setting somewhere!",
+      "expectedCategory": "other",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2650,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"low\",\"confidence\":0.95}",
+        "costUsd": 0.0000946
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 322,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "788d8d1f-db83-4f6b-b139-4a350a7288ce",
+      "text": "im locked out of my account and my clients are complaining because their orders are pending. i tried resetting my password but the email never comes to my inbox or spam. please help this is extremely urgent we are losing hundreds of dollars every hour we cant access the dashboard. please bypass the 2fa or send me a manual reset link asap",
+      "expectedCategory": "account",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "account",
+        "priority": "high",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 3391,
+        "rawOutput": "{\"category\": \"account\", \"priority\": \"high\", \"confidence\": 0.95}",
+        "costUsd": 0.00009389999999999999
+      },
+      "fineTuned": {
+        "category": "account",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 550,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "23d17af6-6c11-4665-ad9b-f30bb0d4baa4",
+      "text": "Look I need someone to tell me right now how to bypass the file upload limit for the shared portal. I have a 10GB video file for our biggest client's campaign launch that goes live in literally one hour. They are threatening to pull the contract if it's not uploaded on time. Your UI is capping me at 5GB. Is there a command line tool or a hidden setting I can use to force this? This is incredibly urgent, I'm literally staring at a countdown clock and our entire agency's reputation is on the line. Pls reply fast!!",
+      "expectedCategory": "other",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "account",
+        "priority": "medium",
+        "confidence": 0.9,
+        "parseError": false,
+        "latencyMs": 6925,
+        "rawOutput": "{\"category\": \"account\", \"priority\": \"medium\", \"confidence\": 0.9}",
+        "costUsd": 0.0001088
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 682,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "f4088b00-719a-4702-a4ec-538570d63c54",
+      "text": "omg please help the payment gateway integration is totally broken. since the update this morning every single customer trying to check out gets a red box saying 'Transaction failed: internal system error (code 99)'. we are running a promo today and literally losing thousands of dollars right now because nobody can buy anything. I need someone to look at this immediately, it is completely blocking our store. Please fix it now!!!",
+      "expectedCategory": "bug",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 0.98,
+        "parseError": false,
+        "latencyMs": 3241,
+        "rawOutput": "{\"category\": \"bug\", \"priority\": \"high\", \"confidence\": 0.98}",
+        "costUsd": 0.0000987
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 558,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "b4efd790-4d37-4306-b44b-ce37a97407a5",
+      "text": "Guys, help!! The bulk importer is completely broken right now and it's throwing a 'Critical Database Error 502' every single time I try to upload our client list. This is extremely urgent, we have a massive promotional email scheduled to go out in 45 minutes and we can't load the new contacts. We are literally going to lose thousands of dollars in ad spend if this isn't fixed immediately. I've tried clearing cache, renaming the CSV, nothing works. Please, someone look at this ASAP, it is blocking our entire team right now!!",
+      "expectedCategory": "bug",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 0.98,
+        "parseError": false,
+        "latencyMs": 3043,
+        "rawOutput": "{\"category\": \"bug\", \"priority\": \"high\", \"confidence\": 0.98}",
+        "costUsd": 0.0001095
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 615,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "ac686cb6-9ba8-4ce6-b3ec-9eabd39aad89",
+      "text": "Hey is there any way to bypass the 500-email-per-day campaign cap? We have a massive product launch happening RIGHT NOW and our partner just blasted a dead link, we need to send a correction to 5,000 people immediately or we're going to lose tens of thousands of dollars in sales today. Please tell me you can lift this for us temporarily, we are literally bleeding cash every minute we wait. I know it's a platform limit but this is a life or death situation for our business.",
+      "expectedCategory": "other",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "account",
+        "priority": "high",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 3169,
+        "rawOutput": "{\n  \"category\": \"account\",\n  \"priority\": \"high\",\n  \"confidence\": 0.95\n}",
+        "costUsd": 0.00011509999999999999
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 568,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "dcadcd06-01e4-453e-adec-c83b1e3f9e19",
+      "text": "guys please help. our entire billing run is completely stuck. we are trying to process the end-of-month invoices and every single time we hit 'generate batch' it spins for 5 seconds and then throws a 'Fatal Error: DB_CONNECTION_TIMEOUT' popup. this is a massive disaster for us, we have over $80k in transactions that need to go out TODAY or we miss the clearing deadline. i have tried logging out, clearing cache, everything, but it's totally broken on your end. please please get someone from engineering to fix this immediately, we are losing money by the minute here!!",
+      "expectedCategory": "bug",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 5254,
+        "rawOutput": "{\"category\": \"bug\", \"priority\": \"high\", \"confidence\": 0.95}",
+        "costUsd": 0.0001119
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 695,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "64145ffe-deb0-4349-9b6a-b3867c0fa248",
+      "text": "hey, quick question - is there any way to change the dashboard background to like a soft gray or sepia? the current dark mode is a bit too high contrast for my eyes but the light mode is super bright when im working late. totally not urgent at all, just a nice to have if you guys are ever updating the themes!",
+      "expectedCategory": "other",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2273,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"low\",\"confidence\":0.95}",
+        "costUsd": 0.0000892
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 567,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "5332a359-6a8a-467c-b125-c6c35825e1d2",
+      "text": "hey, quick question - is there any way to collapse the left sidebar completely? it takes up a bit of screen space on my laptop and i don't really use most of those links anyway. not a big deal at all, just thought i'd ask if i missed a setting somewhere or if it's something you guys might add later. thanks!",
+      "expectedCategory": "other",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2596,
+        "rawOutput": "{\"category\": \"other\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.00009570000000000001
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 525,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "3ffab990-0139-4c54-ab4b-bc09e442a9f9",
+      "text": "hey, so this is super minor but on my dashboard my name shows up as 'justin' instead of 'Justin'. I checked my account settings and it's capitalized there. Just looks a bit sloppy on the main page, is there a way to fix it? No rush at all, thanks.",
+      "expectedCategory": "account",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2130,
+        "rawOutput": "{\n  \"category\": \"bug\",\n  \"priority\": \"low\",\n  \"confidence\": 0.95\n}",
+        "costUsd": 0.00010039999999999999
+      },
+      "fineTuned": {
+        "category": "account",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 744,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "d9837f6f-1d47-40a8-98ad-bd75d2e2c752",
+      "text": "hey, is there anyway to sync the exports directly to google sheets? right now i have to download the csv every morning and then import it to our team drive. its not the end of the world but doing it daily is kinda getting tedious. would love to see a direct integration if possible! thanks.",
+      "expectedCategory": "other",
+      "expectedPriority": "medium",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 1881,
+        "rawOutput": "{\"category\": \"other\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.00009209999999999999
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "medium",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 296,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"medium\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "7f2bc331-2f22-4af1-9082-9ca6e6cc8212",
+      "text": "Hey there, quick question about my account profile. For some reason my username is showing as all lowercase 'davidsmith99' on the dashboard even though I registered as 'DavidSmith99'. I looked in the settings but there doesn't seem to be an option to change the capitalization. It's totally fine and doesn't stop me from doing anything, just a bit of an eyesore lol. Let me know if this is something you can tweak on your end, thanks!",
+      "expectedCategory": "account",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "account",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2403,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"low\",\"confidence\":0.95}",
+        "costUsd": 0.0000991
+      },
+      "fineTuned": {
+        "category": "account",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 501,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "66cf7321-4c7d-4206-83e4-4f8865ed942b",
+      "text": "Hey, so I updated my display name in my profile settings from 'mike_d' to 'MikeD' but for some reason, in the top right corner of the dashboard it still says 'mike_d' in lowercase. It updated everywhere else though, like in my profile page itself. Not a big deal at all, just a bit of an eyesore lol. Let me know if there's a way to force it to update there too. Thanks!",
+      "expectedCategory": "account",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "bug",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 1751,
+        "rawOutput": "{\"category\": \"bug\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.00010229999999999999
+      },
+      "fineTuned": {
+        "category": "account",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 629,
+        "rawOutput": "{\"category\":\"account\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "d25c935c-de08-48a1-ab55-fc441e77223f",
+      "text": "Hey, quick question/feedback. I've been using the app for a few weeks and love it, but is there any way to turn off the sound effect when a task is completed? It's kind of annoying when I'm wearing headphones and listening to music. Not a major issue obviously, just a minor annoyance. Love the app otherwise!",
+      "expectedCategory": "other",
+      "expectedPriority": "low",
+      "gemini": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 1887,
+        "rawOutput": "{\"category\": \"other\", \"priority\": \"low\", \"confidence\": 0.95}",
+        "costUsd": 0.00009539999999999999
+      },
+      "fineTuned": {
+        "category": "other",
+        "priority": "low",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 520,
+        "rawOutput": "{\"category\":\"other\",\"priority\":\"low\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    },
+    {
+      "id": "b0f89e92-1a2a-44a8-b0e5-f866375563c0",
+      "text": "Okay I need someone to look at this right now. I am trying to blast our weekly promo to our main list and the send button is just giving me a spinny wheel and then a 'Transaction Failed: Code 901' error. It is not sending anything. We have a flash sale live right now and clients are complaining they didn't get their codes. I am losing money by the minute here, please tell me how to bypass this or fix it on your end ASAP!!!!",
+      "expectedCategory": "bug",
+      "expectedPriority": "high",
+      "gemini": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 0.95,
+        "parseError": false,
+        "latencyMs": 2765,
+        "rawOutput": "{\"category\": \"bug\", \"priority\": \"high\", \"confidence\": 0.95}",
+        "costUsd": 0.0001038
+      },
+      "fineTuned": {
+        "category": "bug",
+        "priority": "high",
+        "confidence": 1,
+        "parseError": false,
+        "latencyMs": 548,
+        "rawOutput": "{\"category\":\"bug\",\"priority\":\"high\",\"confidence\":1}",
+        "costUsd": 0
+      }
+    }
+  ]
+}
