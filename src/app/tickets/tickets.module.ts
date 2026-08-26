@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 
+import { OllamaModule } from '../../ai/ollama/ollama.module';
 import { KbModule } from '../kb/kb.module';
-import { ClassifyTicketAgent } from './agents/classify-ticket.agent';
 import { DiagnoseTicketAgent } from './agents/diagnose-ticket.agent';
 import { ProposeTicketActionAgent } from './agents/propose-ticket-action.agent';
+import { GeminiTicketClassifier } from './classification/gemini-ticket-classifier';
+import { OllamaTicketClassifier } from './classification/ollama-ticket-classifier';
+import { TicketClassifierAgent } from './classification/ticket-classifier.agent';
+import { TICKET_CLASSIFIER_CHAIN } from './classification/ticket-classifier.constants';
+import type { ITicketClassifier } from './classification/ticket-classifier.interface';
 import { TICKET_COMMAND_HANDLERS } from './commands';
 import { TicketClassificationStepService } from './orchestrator/steps/ticket-classification-step.service';
 import { TicketDiagnosisStepService } from './orchestrator/steps/ticket-diagnosis-step.service';
@@ -19,14 +24,21 @@ import { TicketRepository } from './repositories/ticket.repository';
 import { TicketsController } from './tickets.controller';
 
 @Module({
-  imports: [CqrsModule, KbModule],
+  imports: [CqrsModule, KbModule, OllamaModule],
   providers: [
     TicketRepository,
     TicketAttachmentRepository,
     TicketClassificationRepository,
     TicketInvestigationRepository,
     TicketActionApprovalRepository,
-    ClassifyTicketAgent,
+    OllamaTicketClassifier,
+    GeminiTicketClassifier,
+    TicketClassifierAgent,
+    {
+      provide: TICKET_CLASSIFIER_CHAIN,
+      useFactory: (ollama: OllamaTicketClassifier, gemini: GeminiTicketClassifier): ITicketClassifier[] => [ollama, gemini],
+      inject: [OllamaTicketClassifier, GeminiTicketClassifier],
+    },
     DiagnoseTicketAgent,
     ProposeTicketActionAgent,
     TicketInvestigationContextService,

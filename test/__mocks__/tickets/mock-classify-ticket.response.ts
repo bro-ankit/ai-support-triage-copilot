@@ -1,4 +1,4 @@
-import type { ClassifyTicketResponse } from '../../../src/app/tickets/agents/classify-ticket.agent';
+import type { ClassifyTicketResponse } from '../../../src/app/tickets/classification/ticket-classification.contract';
 
 export const mockClassifyTicketResponse = (args: Partial<ClassifyTicketResponse> = {}): ClassifyTicketResponse => ({
   category: 'billing',

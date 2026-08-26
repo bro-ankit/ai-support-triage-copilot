@@ -2,21 +2,19 @@ import { TestBed } from '@automock/jest';
 
 import { AI_CLIENT } from '../../../../src/ai/ai.constants';
 import type { IAiClient } from '../../../../src/ai/ai.interface';
-import {
-  CLASSIFY_TICKET_SYSTEM_PROMPT,
-  ClassifyTicketAgent,
-} from '../../../../src/app/tickets/agents/classify-ticket.agent';
+import { GeminiTicketClassifier } from '../../../../src/app/tickets/classification/gemini-ticket-classifier';
+import { CLASSIFY_TICKET_SYSTEM_PROMPT } from '../../../../src/app/tickets/classification/ticket-classification.contract';
 import { mockTicketSelect } from '../../../__mocks__';
 import { AssertUtils } from '../../../utils/assert.utils';
 
 const TICKET = mockTicketSelect({ subject: 'Charged twice', description: 'Please refund the duplicate charge.' });
 
-describe('ClassifyTicketAgent Unit Test', () => {
-  let sut: ClassifyTicketAgent;
+describe('GeminiTicketClassifier Unit Test', () => {
+  let sut: GeminiTicketClassifier;
   let aiClient: jest.Mocked<IAiClient>;
 
   beforeAll(() => {
-    const { unit, unitRef } = TestBed.create(ClassifyTicketAgent).compile();
+    const { unit, unitRef } = TestBed.create(GeminiTicketClassifier).compile();
 
     sut = unit;
     aiClient = unitRef.get(AI_CLIENT);
@@ -58,7 +56,10 @@ describe('ClassifyTicketAgent Unit Test', () => {
       test('Then it throws an InternalServerErrorException', async () => {
         aiClient.generateStructured.mockResolvedValue({ category: 'not-a-category', priority: 'high', confidence: 0.9 });
 
-        await AssertUtils.assertError(() => sut.classify(TICKET, ''), 'Classify Ticket agent returned a malformed response')
+        await AssertUtils.assertError(
+          () => sut.classify(TICKET, ''),
+          'Gemini ticket classifier returned a malformed response',
+        );
       });
     });
   });

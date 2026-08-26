@@ -5,14 +5,14 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { InjectionHeuristicUtil } from '../../../../ai/injection-heuristic.util';
 import type { TicketSelect } from '../../../../schema/tickets.schema';
-import { ClassifyTicketAgent } from '../../agents/classify-ticket.agent';
+import { TicketClassifierAgent } from '../../classification/ticket-classifier.agent';
 import { TicketClassificationRepository } from '../../repositories/ticket-classification.repository';
 
 @Injectable()
 export class TicketClassificationStepService {
   constructor(
     @InjectPinoLogger(TicketClassificationStepService.name) private readonly logger: PinoLogger,
-    private readonly classifyTicketAgent: ClassifyTicketAgent,
+    private readonly ticketClassifierAgent: TicketClassifierAgent,
     private readonly ticketClassificationRepository: TicketClassificationRepository,
   ) { }
 
@@ -24,7 +24,7 @@ export class TicketClassificationStepService {
     }
 
     try {
-      const classification = await this.classifyTicketAgent.classify(ticket, attachmentText);
+      const classification = await this.ticketClassifierAgent.classify(ticket, attachmentText);
       await this.ticketClassificationRepository.insert({
         id: randomUUID(),
         ticketId: ticket.id,
