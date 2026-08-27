@@ -1,3 +1,7 @@
+import { bootstrapTracing } from './tracing/otel-bootstrap';
+
+bootstrapTracing(); // must run before any other import touches instrumented code paths
+
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';

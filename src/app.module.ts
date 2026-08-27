@@ -7,6 +7,7 @@ import { KbModule } from './app/kb/kb.module';
 import { TicketsModule } from './app/tickets/tickets.module';
 import { CoreInfraModule } from './core-infra.module';
 import { McpModule } from './mcp/mcp.module';
+import { traceLogMixin } from './tracing/trace-log-mixin';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { McpModule } from './mcp/mcp.module';
           paths: ['req.headers.cookie', 'req.headers.authorization', 'req.headers["x-api-key"]'],
           censor: '[REDACTED]',
         },
+        mixin: traceLogMixin,
       },
     }),
   ],

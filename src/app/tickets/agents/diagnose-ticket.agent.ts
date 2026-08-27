@@ -8,6 +8,7 @@ import { PromptInjectionGuardUtil } from '../../../ai/prompt-injection-guard.uti
 import { TrackAiUsage } from '../../../metrics/track-ai-usage.decorator';
 import { Resilient } from '../../../resilience';
 import type { TicketSelect } from '../../../schema/tickets.schema';
+import { Traced } from '../../../tracing/traced.decorator';
 
 const DIAGNOSE_TICKET_SCHEMA: AiResponseSchema = {
   type: 'object',
@@ -40,6 +41,11 @@ const SYSTEM_PROMPT =
 export class DiagnoseTicketAgent {
   constructor(@Inject(AI_CLIENT) private readonly aiClient: IAiClient) {}
 
+  @Traced<[TicketSelect, string], DiagnoseTicketResponse>(
+    'reason',
+    (ticket) => ({ 'ticket.id': ticket.id }),
+    (result) => ({ 'diagnosis.confidence': result.confidence }),
+  )
   @TrackAiUsage('TICKET_DIAGNOSE')
   @Resilient({ options: { timeoutMs: 30_000 } })
   async diagnose(ticket: TicketSelect, kbFindings: string): Promise<DiagnoseTicketResponse> {

@@ -5,6 +5,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { plainToInstance } from 'class-transformer';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { Traced } from '../../../tracing/traced.decorator';
 import { TicketActionApprovalResponseDto } from '../dto/ticket-action-approval-response.dto';
 import { TicketActionApprovalRepository } from '../repositories/ticket-action-approval.repository';
 import { TicketInvestigationRepository } from '../repositories/ticket-investigation.repository';
@@ -23,6 +24,11 @@ export class ApproveTicketActionCommandHandler
     private readonly ticketActionApprovalRepository: TicketActionApprovalRepository,
   ) {}
 
+  @Traced<[ApproveTicketActionCommand], TicketActionApprovalResponseDto>(
+    'gate_approve',
+    (command) => ({ 'ticket.id': command.ticketId, 'investigation.id': command.investigationId }),
+    (result) => ({ 'approval.action': result.action }),
+  )
   async execute(command: ApproveTicketActionCommand): Promise<TicketActionApprovalResponseDto> {
     const { ticketId, investigationId, approvedBy } = command;
 

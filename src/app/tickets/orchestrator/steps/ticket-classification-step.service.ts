@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
 import { Injectable } from '@nestjs/common';
+import { trace } from '@opentelemetry/api';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { InjectionHeuristicUtil } from '../../../../ai/injection-heuristic.util';
 import type { TicketSelect } from '../../../../schema/tickets.schema';
+import { Traced } from '../../../../tracing/traced.decorator';
 import { TicketClassifierAgent } from '../../classification/ticket-classifier.agent';
 import { TicketClassificationRepository } from '../../repositories/ticket-classification.repository';
 
@@ -16,7 +18,10 @@ export class TicketClassificationStepService {
     private readonly ticketClassificationRepository: TicketClassificationRepository,
   ) { }
 
+  @Traced<[TicketSelect, string]>('classify', (ticket) => ({ 'ticket.id': ticket.id }))
   async run(ticket: TicketSelect, attachmentText: string): Promise<void> {
+    // classification.* attributes are set below, not via mapResult, run() returns void, the
+    // classification result only exists as a local variable inside the try block.
     this.logger.debug({ ticketId: ticket.id }, 'Running ticket classification step');
 
     if (ticket.description && InjectionHeuristicUtil.looksLikeInjectionAttempt(ticket.description)) {
@@ -31,6 +36,11 @@ export class TicketClassificationStepService {
         category: classification.category,
         priority: classification.priority,
         confidence: classification.confidence,
+      });
+      trace.getActiveSpan()?.setAttributes({
+        'classification.category': classification.category,
+        'classification.priority': classification.priority,
+        'classification.confidence': classification.confidence,
       });
       this.logger.info(
         { ticketId: ticket.id, category: classification.category, priority: classification.priority },

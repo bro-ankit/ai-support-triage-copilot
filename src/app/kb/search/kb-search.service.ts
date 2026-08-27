@@ -5,6 +5,7 @@ import { AI_CLIENT } from '../../../ai/ai.constants';
 import type { IAiClient } from '../../../ai/ai.interface';
 import { TrackAiUsage } from '../../../metrics/track-ai-usage.decorator';
 import type { KbChunkSelect } from '../../../schema/kb-chunks.schema';
+import { Traced } from '../../../tracing/traced.decorator';
 import { KbChunkRepository } from '../repositories/kb-chunk.repository';
 import { KbSearchCacheService } from './kb-search-cache.service';
 import { KbRerankerService } from './kb-reranker.service';
@@ -19,8 +20,13 @@ export class KbSearchService {
     private readonly kbChunkRepository: KbChunkRepository,
     private readonly kbRerankerService: KbRerankerService,
     private readonly kbSearchCacheService: KbSearchCacheService,
-  ) {}
+  ) { }
 
+  @Traced<[string], KbChunkSelect[]>(
+    'retrieve',
+    (query) => ({ 'kb.query_length': query.length }),
+    (results) => ({ 'kb.chunks_found': results.length }),
+  )
   @TrackAiUsage('EMBEDDING')
   async search(query: string): Promise<KbChunkSelect[]> {
     this.logger.info({ query }, 'Hybrid KB search request');

@@ -4,6 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { DrizzleTransactionService } from '../../../database/drizzle-transaction.service';
+import { Traced } from '../../../tracing/traced.decorator';
 import { TicketInvestigationResponseDto } from '../dto/ticket-investigation-response.dto';
 import { TicketActionApprovalRepository } from '../repositories/ticket-action-approval.repository';
 import { TicketInvestigationRepository } from '../repositories/ticket-investigation.repository';
@@ -22,6 +23,11 @@ export class ExecuteTicketActionCommandHandler
     private readonly ticketActionApprovalRepository: TicketActionApprovalRepository,
   ) { }
 
+  @Traced<[ExecuteTicketActionCommand], TicketInvestigationResponseDto>(
+    'gate_execute',
+    (command) => ({ 'ticket.id': command.ticketId, 'investigation.id': command.investigationId }),
+    (result) => ({ 'investigation.status': result.status }),
+  )
   async execute(command: ExecuteTicketActionCommand): Promise<TicketInvestigationResponseDto> {
     const { ticketId, investigationId } = command;
 

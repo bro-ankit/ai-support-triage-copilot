@@ -3,6 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { OllamaClassifierClient } from '../../../ai/ollama/ollama-classifier.client';
 import type { TicketSelect } from '../../../schema/tickets.schema';
+import { Traced } from '../../../tracing/traced.decorator';
 import { ClassifyTicketPromptUtil } from './classify-ticket-prompt.util';
 import { CLASSIFY_TICKET_RESPONSE_SCHEMA, CLASSIFY_TICKET_SYSTEM_PROMPT, type ClassifyTicketResponse } from './ticket-classification.contract';
 import type { ITicketClassifier } from './ticket-classifier.interface';
@@ -16,6 +17,14 @@ export class OllamaTicketClassifier implements ITicketClassifier {
     private readonly ollamaClassifierClient: OllamaClassifierClient,
   ) { }
 
+  @Traced<[TicketSelect, string], ClassifyTicketResponse | null>(
+    'classify.ollama',
+    (ticket) => ({ 'ticket.id': ticket.id, 'classifier.source': 'fine-tuned' }),
+    (result) =>
+      result
+        ? { 'classifier.handled': true, 'classification.category': result.category, 'classification.priority': result.priority }
+        : { 'classifier.handled': false },
+  )
   async classify(ticket: TicketSelect, attachmentText: string): Promise<ClassifyTicketResponse | null> {
     const userContent = ClassifyTicketPromptUtil.buildUserContent(ticket, attachmentText);
 

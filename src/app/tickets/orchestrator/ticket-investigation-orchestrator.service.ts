@@ -6,6 +6,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import type { TicketInvestigationSelect } from '../../../schema/ticket-investigations.schema';
 import type { TicketSelect } from '../../../schema/tickets.schema';
+import { Traced } from '../../../tracing/traced.decorator';
 import { TicketInvestigationProgressEvent } from '../events/ticket-investigation-progress.event';
 import { TicketInvestigationRepository } from '../repositories/ticket-investigation.repository';
 import { TICKETS_ERRORS } from '../tickets.constants';
@@ -24,6 +25,11 @@ export class TicketInvestigationOrchestratorService {
     private readonly eventBus: EventBus,
   ) { }
 
+  @Traced<[UUID, AbortSignal?], TicketInvestigationSelect>(
+    'ticket_investigation',
+    (ticketId) => ({ 'ticket.id': ticketId }),
+    (investigation) => ({ 'investigation.status': investigation.status }),
+  )
   async investigate(ticketId: UUID, abortSignal?: AbortSignal): Promise<TicketInvestigationSelect> {
     this.logger.info({ ticketId }, 'Starting ticket investigation');
 

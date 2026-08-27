@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { ResilienceModule } from './resilience';
 import { StorageModule } from './storage/storage.module';
+import { TracingModule } from './tracing/tracing.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { StorageModule } from './storage/storage.module';
     DatabaseModule,
     AiModule,
     MetricsModule,
+    TracingModule,
     StorageModule,
     CacheModule,
     AuthModule,

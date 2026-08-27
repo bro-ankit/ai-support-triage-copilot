@@ -9,6 +9,7 @@ import { TrackAiUsage } from '../../../metrics/track-ai-usage.decorator';
 import { Resilient } from '../../../resilience';
 import { TICKET_PROPOSED_ACTIONS } from '../../../schema/ticket-investigations.schema';
 import type { TicketSelect } from '../../../schema/tickets.schema';
+import { Traced } from '../../../tracing/traced.decorator';
 import type { DiagnoseTicketResponse } from './diagnose-ticket.agent';
 
 const PROPOSE_TICKET_ACTION_SCHEMA: AiResponseSchema = {
@@ -44,6 +45,11 @@ const SYSTEM_PROMPT =
 export class ProposeTicketActionAgent {
   constructor(@Inject(AI_CLIENT) private readonly aiClient: IAiClient) {}
 
+  @Traced<[TicketSelect, DiagnoseTicketResponse], ProposeTicketActionResponse>(
+    'propose',
+    (ticket) => ({ 'ticket.id': ticket.id }),
+    (result) => ({ 'proposed.action': result.action }),
+  )
   @TrackAiUsage('TICKET_PROPOSE_ACTION')
   @Resilient({ options: { timeoutMs: 30_000 } })
   async propose(ticket: TicketSelect, diagnosis: DiagnoseTicketResponse): Promise<ProposeTicketActionResponse> {

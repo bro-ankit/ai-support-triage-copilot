@@ -49,6 +49,16 @@ services:
       timeout: 5s
       retries: 5
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.76.0
+    container_name: support_triage_jaeger
+    restart: unless-stopped
+    ports:
+      - '16686:16686'
+      - '4318:4318' 
+    environment:
+      COLLECTOR_OTLP_ENABLED: 'true'
+
 volumes:
   pgdata:
   localstack_data:
