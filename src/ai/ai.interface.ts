@@ -40,5 +40,6 @@ export interface IAiClient {
   generateWithTools(systemPrompt: string, history: AgentMessage[], tools: AgentTool[]): Promise<AgentTurnResult>;
   generateTextStream(systemPrompt: string, userMessage: string): AsyncIterable<string>;
   extractTextFromImage(buffer: Buffer, mimeType: string): Promise<string>;
+  extractTextFromDocument(buffer: Buffer, mimeType: string): Promise<string>;
   transcribeAudio(buffer: Buffer, mimeType: string): Promise<string>;
 }

@@ -34,6 +34,9 @@ import {
 } from './gemini.constants';
 
 const OCR_EXTRACTION_PROMPT = 'Extract all text visible in this image, verbatim. Return only the extracted text.';
+const DOCUMENT_EXTRACTION_PROMPT =
+  'Extract all text content from this document, verbatim, preserving section headings and paragraph ' +
+  'structure where helpful for readability. Return only the extracted text, no commentary.';
 const TRANSCRIPTION_PROMPT = 'Transcribe this audio recording verbatim. Return only the transcribed text.';
 
 @Injectable()
@@ -215,6 +218,25 @@ export class GeminiClient implements IAiClient {
       const model = this.client.getGenerativeModel({ model: this.generationModel });
       const result = await model.generateContent([
         { text: OCR_EXTRACTION_PROMPT },
+        { inlineData: { data: buffer.toString('base64'), mimeType } },
+      ]);
+      const usage = this.extractUsage(result.response.usageMetadata);
+      this.recordUsage(usage, Date.now() - start);
+      return result.response.text();
+    } catch (err) {
+      this.logger.error({ err }, GEMINI_ERRORS.API_CALL_FAILED);
+      throw new InternalServerErrorException(GEMINI_ERRORS.API_CALL_FAILED, { cause: err });
+    }
+  }
+
+  @Resilient()
+  async extractTextFromDocument(buffer: Buffer, mimeType: string): Promise<string> {
+    this.logger.info({ model: this.generationModel, mimeType }, 'Extracting text from document');
+    const start = Date.now();
+    try {
+      const model = this.client.getGenerativeModel({ model: this.generationModel });
+      const result = await model.generateContent([
+        { text: DOCUMENT_EXTRACTION_PROMPT },
         { inlineData: { data: buffer.toString('base64'), mimeType } },
       ]);
       const usage = this.extractUsage(result.response.usageMetadata);

@@ -50,6 +50,8 @@ const IMAGE_BUFFER = Buffer.from('fake-png-bytes');
 const AUDIO_BUFFER = Buffer.from('fake-audio-bytes');
 const OCR_TEXT = 'Error 500: Payment failed';
 const TRANSCRIPT_TEXT = 'The checkout page keeps crashing on my phone.';
+const PDF_BUFFER = Buffer.from('fake-pdf-bytes');
+const DOCUMENT_TEXT = 'Postmortem: duplicate charges caused by non-idempotent webhook retries.';
 
 describe('GeminiClient Unit Test', () => {
   let sut: GeminiClient;
@@ -275,6 +277,42 @@ describe('GeminiClient Unit Test', () => {
 
         await AssertUtils.assertError(
           () => sut.extractTextFromImage(IMAGE_BUFFER, 'image/png'),
+          'Gemini API call failed',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+        expect(metricsReporter.record).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Given extractTextFromDocument', () => {
+    describe('When Gemini returns extracted text', () => {
+      test('Then it calls the model with the document extraction prompt and inline document data, and returns the raw text', async () => {
+        mockGenerateContent.mockResolvedValueOnce({
+          response: { text: () => DOCUMENT_TEXT, usageMetadata: undefined },
+        });
+
+        const result = await sut.extractTextFromDocument(PDF_BUFFER, 'application/pdf');
+
+        expect(result).toBe(DOCUMENT_TEXT);
+        expect(geminiClient.getGenerativeModel).toHaveBeenCalledWith({ model: 'gemini-3.5-flash' });
+        expect(mockGenerateContent).toHaveBeenCalledWith([
+          {
+            text:
+              'Extract all text content from this document, verbatim, preserving section headings and ' +
+              'paragraph structure where helpful for readability. Return only the extracted text, no commentary.',
+          },
+          { inlineData: { data: PDF_BUFFER.toString('base64'), mimeType: 'application/pdf' } },
+        ]);
+      });
+    });
+
+    describe('When the Gemini API call throws', () => {
+      test('Then it throws 500 with "Gemini API call failed" and records no metric', async () => {
+        mockGenerateContent.mockRejectedValueOnce(new Error('upstream error'));
+
+        await AssertUtils.assertError(
+          () => sut.extractTextFromDocument(PDF_BUFFER, 'application/pdf'),
           'Gemini API call failed',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );

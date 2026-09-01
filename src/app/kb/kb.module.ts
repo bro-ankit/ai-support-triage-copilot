@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 
 import { KB_COMMAND_HANDLERS } from './commands';
+import { ContextualChunkService } from './helpers/contextual-chunk.service';
+import { KbArticleIngestionService } from './kb-article-ingestion.service';
 import { KbController } from './kb.controller';
 import { KbArticleRepository } from './repositories/kb-article.repository';
 import { KbChunkRepository } from './repositories/kb-chunk.repository';
@@ -19,6 +21,8 @@ import { KbSearchService } from './search/kb-search.service';
     KbSearchCacheService,
     KbSearchService,
     KbSearchQueryHandler,
+    ContextualChunkService,
+    KbArticleIngestionService,
     ...KB_COMMAND_HANDLERS,
   ],
   controllers: [KbController],

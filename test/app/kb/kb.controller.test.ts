@@ -4,7 +4,11 @@ import { PassportModule } from '@nestjs/passport';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 
+import { CompleteKbArticlePdfUploadCommand } from '../../../src/app/kb/commands/complete-kb-article-pdf-upload.command';
 import { IngestKbArticleCommand } from '../../../src/app/kb/commands/ingest-kb-article.command';
+import { RequestKbArticlePdfUploadCommand } from '../../../src/app/kb/commands/request-kb-article-pdf-upload.command';
+import type { CompleteKbArticlePdfUploadRequestDto } from '../../../src/app/kb/dto/complete-kb-article-pdf-upload-request.dto';
+import type { RequestKbArticlePdfUploadRequestDto } from '../../../src/app/kb/dto/request-kb-article-pdf-upload-request.dto';
 import { KbController } from '../../../src/app/kb/kb.controller';
 import { KbSearchQuery } from '../../../src/app/kb/search/kb-search.query';
 import { AUTH_SCOPES } from '../../../src/auth/auth.constants';
@@ -83,6 +87,86 @@ describe('KbController Test', () => {
           .expect(201);
 
         expect(mockCommandBus.execute).toHaveBeenCalledWith(new IngestKbArticleCommand(body));
+        expect(response.body).toEqual(commandResult);
+      });
+    });
+  });
+
+  describe('Given POST /kb/articles/pdf/presign endpoint', () => {
+    const body: RequestKbArticlePdfUploadRequestDto = { filename: 'postmortem.pdf' };
+
+    describe('When called with no bearer token', () => {
+      test('Then it rejects with 401 without executing the command', async () => {
+        await request(app.getHttpServer()).post('/kb/articles/pdf/presign').send(body).expect(401);
+        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('When called with a token that lacks the mcp scope', () => {
+      test('Then it rejects with 403 without executing the command', async () => {
+        await request(app.getHttpServer())
+          .post('/kb/articles/pdf/presign')
+          .set('Authorization', `Bearer ${NO_SCOPE_TOKEN}`)
+          .send(body)
+          .expect(403);
+        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('When called with a valid mcp-scoped token', () => {
+      test('Then it executes RequestKbArticlePdfUploadCommand with the request body and returns the command result', async () => {
+        const commandResult = { uploadUrl: 'https://s3.example.com', uploadFields: { key: 'kb-articles/x.pdf' }, objectKey: 'kb-articles/x.pdf' };
+        mockCommandBus.execute.mockResolvedValue(commandResult);
+
+        const response = await request(app.getHttpServer())
+          .post('/kb/articles/pdf/presign')
+          .set('Authorization', `Bearer ${MCP_TOKEN}`)
+          .send(body)
+          .expect(201);
+
+        expect(mockCommandBus.execute).toHaveBeenCalledWith(new RequestKbArticlePdfUploadCommand(body));
+        expect(response.body).toEqual(commandResult);
+      });
+    });
+  });
+
+  describe('Given POST /kb/articles/pdf/complete endpoint', () => {
+    const body: CompleteKbArticlePdfUploadRequestDto = {
+      objectKey: 'kb-articles/x-postmortem.pdf',
+      title: 'Duplicate charge postmortem',
+      sourceType: 'postmortem',
+    };
+
+    describe('When called with no bearer token', () => {
+      test('Then it rejects with 401 without executing the command', async () => {
+        await request(app.getHttpServer()).post('/kb/articles/pdf/complete').send(body).expect(401);
+        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('When called with a token that lacks the mcp scope', () => {
+      test('Then it rejects with 403 without executing the command', async () => {
+        await request(app.getHttpServer())
+          .post('/kb/articles/pdf/complete')
+          .set('Authorization', `Bearer ${NO_SCOPE_TOKEN}`)
+          .send(body)
+          .expect(403);
+        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('When called with a valid mcp-scoped token', () => {
+      test('Then it executes CompleteKbArticlePdfUploadCommand with the request body and returns the command result', async () => {
+        const commandResult = { id: 'article-id', title: body.title, chunkCount: 3 };
+        mockCommandBus.execute.mockResolvedValue(commandResult);
+
+        const response = await request(app.getHttpServer())
+          .post('/kb/articles/pdf/complete')
+          .set('Authorization', `Bearer ${MCP_TOKEN}`)
+          .send(body)
+          .expect(201);
+
+        expect(mockCommandBus.execute).toHaveBeenCalledWith(new CompleteKbArticlePdfUploadCommand(body));
         expect(response.body).toEqual(commandResult);
       });
     });
