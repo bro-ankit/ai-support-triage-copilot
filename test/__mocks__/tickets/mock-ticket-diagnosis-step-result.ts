@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { TicketInvestigationInsert } from '../../../src/schema/ticket-investigations.schema';
-
-type TicketDiagnosisStepResult = Omit<TicketInvestigationInsert, 'id' | 'ticketId' | 'createdAt'>;
+import type { TicketDiagnosisStepResult } from '../../../src/app/tickets/orchestrator/steps/ticket-diagnosis-step.service';
 
 export const mockTicketDiagnosisStepResult = (
   args: Partial<TicketDiagnosisStepResult> = {},

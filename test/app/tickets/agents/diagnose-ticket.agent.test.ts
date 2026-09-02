@@ -57,6 +57,41 @@ describe('DiagnoseTicketAgent Unit Test', () => {
       });
     });
 
+    describe('When called with past-cases text', () => {
+      test('Then it wraps the past cases in an untrusted_past_ticket_content boundary tag', async () => {
+        aiClient.generateStructured.mockResolvedValue({ diagnosis: 'x', confidence: 0.9 });
+
+        await sut.diagnose(TICKET, 'Webhook retries must be idempotent.', 'Past ticket: similar issue');
+
+        expect(aiClient.generateStructured).toHaveBeenCalledWith(
+          SYSTEM_PROMPT_WITH_CANARY,
+          '<untrusted_ticket_content>\n' +
+            `Subject: ${TICKET.subject}\nDescription: ${TICKET.description}\n` +
+            '</untrusted_ticket_content>\n\n' +
+            '<untrusted_kb_content>\nWebhook retries must be idempotent.\n</untrusted_kb_content>\n\n' +
+            '<untrusted_past_ticket_content>\nPast ticket: similar issue\n</untrusted_past_ticket_content>',
+          { type: 'object', properties: { diagnosis: { type: 'string' }, confidence: { type: 'number' } }, required: ['diagnosis', 'confidence'] },
+        );
+      });
+    });
+
+    describe('When called without past-cases text', () => {
+      test('Then it omits the untrusted_past_ticket_content boundary tag entirely', async () => {
+        aiClient.generateStructured.mockResolvedValue({ diagnosis: 'x', confidence: 0.9 });
+
+        await sut.diagnose(TICKET, 'Webhook retries must be idempotent.');
+
+        expect(aiClient.generateStructured).toHaveBeenCalledWith(
+          SYSTEM_PROMPT_WITH_CANARY,
+          '<untrusted_ticket_content>\n' +
+            `Subject: ${TICKET.subject}\nDescription: ${TICKET.description}\n` +
+            '</untrusted_ticket_content>\n\n' +
+            '<untrusted_kb_content>\nWebhook retries must be idempotent.\n</untrusted_kb_content>',
+          { type: 'object', properties: { diagnosis: { type: 'string' }, confidence: { type: 'number' } }, required: ['diagnosis', 'confidence'] },
+        );
+      });
+    });
+
     describe('When the AI client returns a malformed response', () => {
       test('Then it throws an InternalServerErrorException', async () => {
         aiClient.generateStructured.mockResolvedValue({ diagnosis: 'x' });

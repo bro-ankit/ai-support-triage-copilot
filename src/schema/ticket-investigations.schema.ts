@@ -3,8 +3,10 @@ import type { UUID } from 'node:crypto';
 import { relations } from 'drizzle-orm';
 import { doublePrecision, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import { EMBEDDING_DIMENSIONS } from '../ai/gemini/gemini.constants';
 import { ticketActionApprovalsTable } from './ticket-action-approvals.schema';
 import { ticketsTable } from './tickets.schema';
+import { VectorTypeUtil } from './vector.util';
 
 export const TICKET_PROPOSED_ACTIONS = ['refund', 'account_credit', 'escalation', 'reply_only'] as const;
 export type TicketProposedAction = (typeof TICKET_PROPOSED_ACTIONS)[number];
@@ -19,6 +21,7 @@ export type TicketInvestigationStatus = (typeof TICKET_INVESTIGATION_STATUSES)[n
 
 export const ticketInvestigationsTable = pgTable('ticket_investigations', {
   id: uuid('id').$type<UUID>().primaryKey(),
+  tenantId: uuid('tenant_id').$type<UUID>().notNull(),
   ticketId: uuid('ticket_id')
     .$type<UUID>()
     .notNull()
@@ -29,6 +32,7 @@ export const ticketInvestigationsTable = pgTable('ticket_investigations', {
   proposedAction: text('proposed_action').$type<TicketProposedAction>(),
   proposedActionReasoning: text('proposed_action_reasoning'),
   status: text('status').$type<TicketInvestigationStatus>().notNull(),
+  episodeEmbedding: VectorTypeUtil.createVectorType(EMBEDDING_DIMENSIONS)('episode_embedding'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

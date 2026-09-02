@@ -11,6 +11,7 @@ import { TicketClassifierAgent } from './classification/ticket-classifier.agent'
 import { TICKET_CLASSIFIER_CHAIN } from './classification/ticket-classifier.constants';
 import type { ITicketClassifier } from './classification/ticket-classifier.interface';
 import { TICKET_COMMAND_HANDLERS } from './commands';
+import { EpisodicMemoryService } from './memory/episodic-memory.service';
 import { TicketClassificationStepService } from './orchestrator/steps/ticket-classification-step.service';
 import { TicketDiagnosisStepService } from './orchestrator/steps/ticket-diagnosis-step.service';
 import { TicketInvestigationContextService } from './orchestrator/ticket-investigation-context.service';
@@ -41,6 +42,7 @@ import { TicketsController } from './tickets.controller';
     },
     DiagnoseTicketAgent,
     ProposeTicketActionAgent,
+    EpisodicMemoryService,
     TicketInvestigationContextService,
     TicketClassificationStepService,
     TicketDiagnosisStepService,

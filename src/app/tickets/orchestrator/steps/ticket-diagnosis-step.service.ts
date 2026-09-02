@@ -11,10 +11,15 @@ import { KbSearchService } from '../../../kb/search/kb-search.service';
 import { DiagnoseTicketAgent, type DiagnoseTicketResponse } from '../../agents/diagnose-ticket.agent';
 import { ProposeTicketActionAgent } from '../../agents/propose-ticket-action.agent';
 import { TicketInvestigationProgressEvent } from '../../events/ticket-investigation-progress.event';
+import { EpisodicMemoryService } from '../../memory/episodic-memory.service';
+import type { SimilarPastCase } from '../../memory/episodic-memory.types';
 import { TICKETS_ERRORS } from '../../tickets.constants';
 import { TicketInvestigationInsert } from '../../../../schema';
 
-type TicketDiagnosisStepResult = Omit<TicketInvestigationInsert, 'id' | 'ticketId' | 'createdAt'>
+export type TicketDiagnosisStepResult = Omit<
+  TicketInvestigationInsert,
+  'id' | 'ticketId' | 'tenantId' | 'createdAt' | 'episodeEmbedding'
+>
 
 @Injectable()
 export class TicketDiagnosisStepService {
@@ -24,14 +29,20 @@ export class TicketDiagnosisStepService {
   constructor(
     @InjectPinoLogger(TicketDiagnosisStepService.name) private readonly logger: PinoLogger,
     private readonly kbSearchService: KbSearchService,
+    private readonly episodicMemoryService: EpisodicMemoryService,
     private readonly diagnoseTicketAgent: DiagnoseTicketAgent,
     private readonly proposeTicketActionAgent: ProposeTicketActionAgent,
     private readonly eventBus: EventBus,
   ) { }
 
   async run(ticket: TicketSelect, searchQuery: string, abortSignal?: AbortSignal): Promise<TicketDiagnosisStepResult> {
-    this.logger.debug({ ticketId: ticket.id }, 'Running ticket diagnosis step: retrieving KB findings');
+    this.logger.debug({ ticketId: ticket.id }, 'Running ticket diagnosis step: recalling similar past tickets');
 
+    const pastCases = await this.episodicMemoryService.recall(searchQuery, ticket.id);
+    this.publish(ticket.id, 'recalled', `Recalled ${pastCases.length} similar past ticket(s)`);
+
+    this.throwIfAborted(ticket.id, abortSignal);
+    this.logger.debug({ ticketId: ticket.id }, 'Retrieving KB findings');
     const kbChunks = await this.kbSearchService.search(searchQuery);
     this.publish(ticket.id, 'retrieved', `Retrieved ${kbChunks.length} knowledge-base chunk(s)`);
     if (kbChunks.length === 0) {
@@ -53,7 +64,7 @@ export class TicketDiagnosisStepService {
     }
 
     this.throwIfAborted(ticket.id, abortSignal);
-    const diagnosis = await this.diagnoseSafely(ticket, kbChunks);
+    const diagnosis = await this.diagnoseSafely(ticket, kbChunks, pastCases);
     if (!diagnosis) {
       this.publish(ticket.id, 'diagnosed', 'Diagnosis failed');
       return this.diagnosisFailedResult(retrievedChunkIds);
@@ -99,14 +110,29 @@ export class TicketDiagnosisStepService {
     throw new Error(TICKETS_ERRORS.INVESTIGATION_ABORTED);
   }
 
-  private async diagnoseSafely(ticket: TicketSelect, kbChunks: KbChunkSelect[]): Promise<DiagnoseTicketResponse | null> {
+  private async diagnoseSafely(
+    ticket: TicketSelect,
+    kbChunks: KbChunkSelect[],
+    pastCases: SimilarPastCase[],
+  ): Promise<DiagnoseTicketResponse | null> {
     const kbFindingsText = kbChunks.map((c) => c.content).join('\n\n---\n\n');
+    const pastCasesText = this.formatPastCases(pastCases);
     try {
-      return await this.diagnoseTicketAgent.diagnose(ticket, kbFindingsText);
+      return await this.diagnoseTicketAgent.diagnose(ticket, kbFindingsText, pastCasesText);
     } catch (err) {
       this.logger.warn({ ticketId: ticket.id, err }, 'Diagnosis failed');
       return null;
     }
+  }
+
+  private formatPastCases(pastCases: SimilarPastCase[]): string {
+    return pastCases
+      .map(
+        (c) =>
+          `Past ticket: ${c.subject}\nDescription: ${c.description ?? '(none provided)'}\n` +
+          `Diagnosis: ${c.diagnosis}\nResolution: ${c.proposedAction ?? '(none)'}`,
+      )
+      .join('\n\n---\n\n');
   }
 
   private async proposeSafely(

@@ -4,11 +4,13 @@ import { DiagnoseTicketAgent } from '../../../../src/app/tickets/agents/diagnose
 import { TicketDiagnosisStepService } from '../../../../src/app/tickets/orchestrator/steps/ticket-diagnosis-step.service';
 import { ProposeTicketActionAgent } from '../../../../src/app/tickets/agents/propose-ticket-action.agent';
 import { KbSearchService } from '../../../../src/app/kb/search/kb-search.service';
+import { EpisodicMemoryService } from '../../../../src/app/tickets/memory/episodic-memory.service';
 import { TICKETS_ERRORS } from '../../../../src/app/tickets/tickets.constants';
 import {
   mockDiagnoseTicketResponse,
   mockKbChunkSelect,
   mockProposeTicketActionResponse,
+  mockSimilarPastCase,
   mockTicketSelect,
 } from '../../../__mocks__';
 import { AssertUtils } from '../../../utils/assert.utils';
@@ -20,6 +22,7 @@ const CHUNK = mockKbChunkSelect();
 describe('TicketDiagnosisStepService Unit Test', () => {
   let sut: TicketDiagnosisStepService;
   let kbSearchService: jest.Mocked<KbSearchService>;
+  let episodicMemoryService: jest.Mocked<EpisodicMemoryService>;
   let diagnoseTicketAgent: jest.Mocked<DiagnoseTicketAgent>;
   let proposeTicketActionAgent: jest.Mocked<ProposeTicketActionAgent>;
 
@@ -28,12 +31,14 @@ describe('TicketDiagnosisStepService Unit Test', () => {
 
     sut = unit;
     kbSearchService = unitRef.get(KbSearchService);
+    episodicMemoryService = unitRef.get(EpisodicMemoryService);
     diagnoseTicketAgent = unitRef.get(DiagnoseTicketAgent);
     proposeTicketActionAgent = unitRef.get(ProposeTicketActionAgent);
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
+    episodicMemoryService.recall.mockResolvedValue([]);
   });
 
   describe('Given run', () => {
@@ -133,6 +138,36 @@ describe('TicketDiagnosisStepService Unit Test', () => {
           proposedActionReasoning: proposal.reasoning,
           status: 'completed',
         });
+      });
+    });
+
+    describe('When episodic recall returns no similar past tickets', () => {
+      test('Then it diagnoses with an empty past-cases text and publishes a recalled event with a zero count', async () => {
+        kbSearchService.search.mockResolvedValue([CHUNK]);
+        diagnoseTicketAgent.diagnose.mockResolvedValue(mockDiagnoseTicketResponse());
+
+        await sut.run(TICKET, SEARCH_QUERY);
+
+        expect(episodicMemoryService.recall).toHaveBeenCalledWith(SEARCH_QUERY, TICKET.id);
+        expect(diagnoseTicketAgent.diagnose).toHaveBeenCalledWith(TICKET, CHUNK.content, '');
+      });
+    });
+
+    describe('When episodic recall returns similar past tickets', () => {
+      test('Then it diagnoses with those cases formatted into the past-cases text', async () => {
+        const pastCase = mockSimilarPastCase();
+        kbSearchService.search.mockResolvedValue([CHUNK]);
+        episodicMemoryService.recall.mockResolvedValue([pastCase]);
+        diagnoseTicketAgent.diagnose.mockResolvedValue(mockDiagnoseTicketResponse());
+
+        await sut.run(TICKET, SEARCH_QUERY);
+
+        expect(diagnoseTicketAgent.diagnose).toHaveBeenCalledWith(
+          TICKET,
+          CHUNK.content,
+          `Past ticket: ${pastCase.subject}\nDescription: ${pastCase.description}\n` +
+            `Diagnosis: ${pastCase.diagnosis}\nResolution: ${pastCase.proposedAction}`,
+        );
       });
     });
 

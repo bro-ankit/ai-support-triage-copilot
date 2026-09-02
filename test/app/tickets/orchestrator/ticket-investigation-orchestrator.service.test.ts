@@ -8,6 +8,7 @@ import { TicketClassificationStepService } from '../../../../src/app/tickets/orc
 import { TicketDiagnosisStepService } from '../../../../src/app/tickets/orchestrator/steps/ticket-diagnosis-step.service';
 import { TicketInvestigationContextService } from '../../../../src/app/tickets/orchestrator/ticket-investigation-context.service';
 import { TicketInvestigationOrchestratorService } from '../../../../src/app/tickets/orchestrator/ticket-investigation-orchestrator.service';
+import { EpisodicMemoryService } from '../../../../src/app/tickets/memory/episodic-memory.service';
 import { TicketInvestigationRepository } from '../../../../src/app/tickets/repositories/ticket-investigation.repository';
 import { TICKETS_ERRORS } from '../../../../src/app/tickets/tickets.constants';
 import { mockTicketDiagnosisStepResult, mockTicketInvestigationSelect, mockTicketSelect } from '../../../__mocks__';
@@ -28,6 +29,7 @@ describe('TicketInvestigationOrchestratorService Unit Test', () => {
   let contextService: jest.Mocked<TicketInvestigationContextService>;
   let classificationStep: jest.Mocked<TicketClassificationStepService>;
   let diagnosisStep: jest.Mocked<TicketDiagnosisStepService>;
+  let episodicMemoryService: jest.Mocked<EpisodicMemoryService>;
   let ticketInvestigationRepository: jest.Mocked<TicketInvestigationRepository>;
   let eventBus: jest.Mocked<EventBus>;
 
@@ -38,6 +40,7 @@ describe('TicketInvestigationOrchestratorService Unit Test', () => {
     contextService = unitRef.get(TicketInvestigationContextService);
     classificationStep = unitRef.get(TicketClassificationStepService);
     diagnosisStep = unitRef.get(TicketDiagnosisStepService);
+    episodicMemoryService = unitRef.get(EpisodicMemoryService);
     ticketInvestigationRepository = unitRef.get(TicketInvestigationRepository);
     eventBus = unitRef.get(EventBus);
   });
@@ -47,6 +50,7 @@ describe('TicketInvestigationOrchestratorService Unit Test', () => {
     contextService.load.mockResolvedValue({ ticket: TICKET, attachmentText: ATTACHMENT_TEXT });
     classificationStep.run.mockResolvedValue(undefined);
     diagnosisStep.run.mockResolvedValue(DIAGNOSIS_RESULT);
+    episodicMemoryService.embedEpisode.mockResolvedValue(null);
     ticketInvestigationRepository.insert.mockResolvedValue(INSERTED_INVESTIGATION);
   });
 
@@ -62,9 +66,11 @@ describe('TicketInvestigationOrchestratorService Unit Test', () => {
           `${TICKET.subject}\n${TICKET.description}\n${ATTACHMENT_TEXT}`,
           undefined,
         );
+        expect(episodicMemoryService.embedEpisode).toHaveBeenCalledWith(TICKET, DIAGNOSIS_RESULT);
         expect(ticketInvestigationRepository.insert).toHaveBeenCalledWith({
           id: expect.any(String),
           ticketId: TICKET_ID,
+          episodeEmbedding: null,
           ...DIAGNOSIS_RESULT,
         });
         expect(result).toEqual(INSERTED_INVESTIGATION);

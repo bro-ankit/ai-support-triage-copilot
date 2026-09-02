@@ -8,6 +8,7 @@ import type { TicketInvestigationSelect } from '../../../schema/ticket-investiga
 import type { TicketSelect } from '../../../schema/tickets.schema';
 import { Traced } from '../../../tracing/traced.decorator';
 import { TicketInvestigationProgressEvent } from '../events/ticket-investigation-progress.event';
+import { EpisodicMemoryService } from '../memory/episodic-memory.service';
 import { TicketInvestigationRepository } from '../repositories/ticket-investigation.repository';
 import { TICKETS_ERRORS } from '../tickets.constants';
 import { TicketClassificationStepService } from './steps/ticket-classification-step.service';
@@ -21,6 +22,7 @@ export class TicketInvestigationOrchestratorService {
     private readonly contextService: TicketInvestigationContextService,
     private readonly classificationStep: TicketClassificationStepService,
     private readonly diagnosisStep: TicketDiagnosisStepService,
+    private readonly episodicMemoryService: EpisodicMemoryService,
     private readonly ticketInvestigationRepository: TicketInvestigationRepository,
     private readonly eventBus: EventBus,
   ) { }
@@ -44,8 +46,9 @@ export class TicketInvestigationOrchestratorService {
     this.logger.debug({ ticketId }, 'Handing off to diagnosis step');
     const result = await this.diagnosisStep.run(ticket, this.buildSearchQuery(ticket, attachmentText), abortSignal);
 
+    const episodeEmbedding = await this.episodicMemoryService.embedEpisode(ticket, result);
     this.logger.info({ ticketId, status: result.status }, 'Ticket investigation complete');
-    return this.ticketInvestigationRepository.insert({ id: randomUUID(), ticketId, ...result });
+    return this.ticketInvestigationRepository.insert({ id: randomUUID(), ticketId, episodeEmbedding, ...result });
   }
 
   private throwIfAborted(ticketId: UUID, abortSignal?: AbortSignal): void {
