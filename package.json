@@ -42,6 +42,8 @@
     "@google/generative-ai": "^0.24.1",
     "@huggingface/transformers": "^4.2.0",
     "@keyv/redis": "^5.1.6",
+    "@langchain/core": "^1.2.9",
+    "@langchain/langgraph": "^1.4.13",
     "@modelcontextprotocol/express": "^2.0.0",
     "@modelcontextprotocol/node": "^2.0.0",
     "@modelcontextprotocol/server": "2.0.0",

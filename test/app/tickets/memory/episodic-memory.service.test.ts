@@ -4,10 +4,10 @@ import { TestBed } from '@automock/jest';
 
 import { AI_CLIENT } from '../../../../src/ai/ai.constants';
 import type { IAiClient } from '../../../../src/ai/ai.interface';
-import { EpisodicMemoryService } from '../../../../src/app/tickets/memory/episodic-memory.service';
 import { EPISODIC_MEMORY_DEFAULTS } from '../../../../src/app/tickets/memory/episodic-memory.constants';
+import { EpisodicMemoryService } from '../../../../src/app/tickets/memory/episodic-memory.service';
 import { TicketInvestigationRepository } from '../../../../src/app/tickets/repositories/ticket-investigation.repository';
-import { mockSimilarPastCase, mockTicketDiagnosisStepResult, mockTicketSelect } from '../../../__mocks__';
+import { mockSimilarPastCase, mockTicketInvestigationResult, mockTicketSelect } from '../../../__mocks__';
 
 const EXCLUDE_TICKET_ID = randomUUID();
 const QUERY = 'Charged twice for order #4821';
@@ -65,7 +65,7 @@ describe('EpisodicMemoryService Unit Test', () => {
   describe('Given embedEpisode', () => {
     describe('When the investigation status is completed', () => {
       test('Then it embeds the ticket subject, description, diagnosis, and resolution', async () => {
-        const result = mockTicketDiagnosisStepResult({
+        const result = mockTicketInvestigationResult({
           status: 'completed',
           diagnosis: 'Duplicate webhook delivery caused a double charge.',
           proposedAction: 'refund',
@@ -83,7 +83,7 @@ describe('EpisodicMemoryService Unit Test', () => {
 
     describe('When the investigation has no proposed action', () => {
       test('Then it embeds the episode text with the resolution placeholder', async () => {
-        const result = mockTicketDiagnosisStepResult({
+        const result = mockTicketInvestigationResult({
           status: 'completed',
           diagnosis: 'Duplicate webhook delivery caused a double charge.',
           proposedAction: null,
@@ -101,7 +101,7 @@ describe('EpisodicMemoryService Unit Test', () => {
     describe('When the ticket has no description', () => {
       test('Then it embeds the episode text with the description placeholder', async () => {
         const ticketWithoutDescription = mockTicketSelect({ subject: TICKET.subject, description: null });
-        const result = mockTicketDiagnosisStepResult({ status: 'completed', diagnosis: 'x', proposedAction: 'refund' });
+        const result = mockTicketInvestigationResult({ status: 'completed', diagnosis: 'x', proposedAction: 'refund' });
 
         await sut.embedEpisode(ticketWithoutDescription, result);
 
@@ -113,7 +113,7 @@ describe('EpisodicMemoryService Unit Test', () => {
 
     describe('When the investigation status is not completed', () => {
       test('Then it returns null without embedding anything', async () => {
-        const result = mockTicketDiagnosisStepResult({ status: 'needs_review' });
+        const result = mockTicketInvestigationResult({ status: 'needs_review' });
 
         const embedding = await sut.embedEpisode(TICKET, result);
 

@@ -47,6 +47,29 @@ class DummyClassifierService {
     await wait(1);
     return { category: 'billing' };
   }
+
+  @Traced('child_span')
+  async childRun(): Promise<string> {
+    await wait(1);
+    return 'child-done';
+  }
+
+  @Traced<[string], string>(
+    'stream_span',
+    (ticketId) => ({ 'ticket.id': ticketId }),
+    (lastValue) => ({ 'last.value': lastValue }),
+  )
+  async *streamRun(_ticketId: string): AsyncGenerator<string> {
+    yield 'first';
+    await this.childRun();
+    yield 'second';
+  }
+
+  @Traced('failing_stream_span')
+  async *failingStreamRun(): AsyncGenerator<string> {
+    yield 'before-failure';
+    throw new Error('stream boom');
+  }
 }
 
 describe('TracingDiscoveryService IT', () => {
@@ -142,6 +165,51 @@ describe('TracingDiscoveryService IT', () => {
         const spans = memoryExporter.getFinishedSpans();
         expect(spans).toHaveLength(1);
         expect(spans[0].attributes).toEqual({ 'ticket.id': 'ticket-123', 'classification.category': 'billing' });
+      });
+    });
+  });
+
+  describe('Given an async generator method decorated with @Traced', () => {
+    describe('When it is drained to completion', () => {
+      test('Then a single span stays open for the whole generator, carries mapArgs/mapResult attributes from the last yielded value, and nests a @Traced call made mid-stream as its child', async () => {
+        const values: string[] = [];
+        for await (const value of dummy.streamRun('ticket-456')) {
+          values.push(value);
+        }
+
+        expect(values).toEqual(['first', 'second']);
+
+        const spans = memoryExporter.getFinishedSpans();
+        expect(spans).toHaveLength(2);
+
+        const childSpan = spans.find((s) => s.name === 'child_span');
+        const streamSpan = spans.find((s) => s.name === 'stream_span');
+        expect(childSpan).toBeDefined();
+        expect(streamSpan).toBeDefined();
+        expect(streamSpan?.status.code).toBe(SpanStatusCode.UNSET);
+        expect(streamSpan?.attributes).toEqual({ 'ticket.id': 'ticket-456', 'last.value': 'second' });
+        expect(childSpan?.parentSpanContext?.spanId).toBe(streamSpan?.spanContext().spanId);
+      });
+    });
+
+    describe('When it throws partway through', () => {
+      test('Then the values yielded before the failure are still produced, and the span records the exception and an ERROR status', async () => {
+        const values: string[] = [];
+        const iterate = async () => {
+          for await (const value of dummy.failingStreamRun()) {
+            values.push(value);
+          }
+        };
+
+        await expect(iterate()).rejects.toThrow('stream boom');
+        expect(values).toEqual(['before-failure']);
+
+        const spans = memoryExporter.getFinishedSpans();
+        expect(spans).toHaveLength(1);
+        expect(spans[0].name).toBe('failing_stream_span');
+        expect(spans[0].status).toEqual({ code: SpanStatusCode.ERROR, message: 'stream boom' });
+        expect(spans[0].events).toHaveLength(1);
+        expect(spans[0].events[0].name).toBe('exception');
       });
     });
   });

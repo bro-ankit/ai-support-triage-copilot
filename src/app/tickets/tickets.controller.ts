@@ -1,20 +1,20 @@
 import type { UUID } from 'node:crypto';
 
 import { Body, Controller, Get, MessageEvent, Param, Post, Sse, SseSignal } from '@nestjs/common';
-import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Observable } from 'rxjs';
+import { plainToInstance } from 'class-transformer';
+import { from, Observable, of } from 'rxjs';
+import { catchError, timeout } from 'rxjs/operators';
 
 import { AUTH_SCOPES } from '../../auth/auth.constants';
+import type { AuthenticatedUser } from '../../auth/auth.types';
 import { CurrentAuth } from '../../auth/decorators/current-auth.decorator';
 import { RequireAuth } from '../../auth/decorators/require-auth.decorator';
-import type { AuthenticatedUser } from '../../auth/auth.types';
-import { SseProgressStreamUtil } from '../../sse/sse-progress-stream.util';
 import { ApproveTicketActionCommand } from './commands/approve-ticket-action.command';
 import { CompleteTicketAttachmentUploadCommand } from './commands/complete-ticket-attachment-upload.command';
 import { CreateTicketCommand } from './commands/create-ticket.command';
 import { ExecuteTicketActionCommand } from './commands/execute-ticket-action.command';
-import { InvestigateTicketCommand } from './commands/investigate-ticket.command';
 import { RequestTicketAttachmentUploadCommand } from './commands/request-ticket-attachment-upload.command';
 import { CreateTicketRequestDto } from './dto/create-ticket-request.dto';
 import { RequestAttachmentUploadRequestDto } from './dto/request-attachment-upload-request.dto';
@@ -22,8 +22,11 @@ import { RequestAttachmentUploadResponseDto } from './dto/request-attachment-upl
 import { TicketActionApprovalResponseDto } from './dto/ticket-action-approval-response.dto';
 import { TicketInvestigationResponseDto } from './dto/ticket-investigation-response.dto';
 import { TicketAttachmentResponseDto, TicketResponseDto } from './dto/ticket-response.dto';
-import { TicketInvestigationProgressEvent } from './events/ticket-investigation-progress.event';
+import { TicketInvestigationGraphService } from './graph/ticket-investigation-graph.service';
+import type { TicketInvestigationStreamEvent } from './graph/ticket-investigation-stream-event.types';
 import { GetTicketQuery } from './queries/get-ticket.query';
+
+const INVESTIGATE_SSE_TIMEOUT_MS = 60_000;
 
 @ApiTags('tickets')
 @ApiBearerAuth()
@@ -32,7 +35,7 @@ export class TicketsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly eventBus: EventBus,
+    private readonly investigationGraph: TicketInvestigationGraphService,
   ) {}
 
   @Post()
@@ -81,23 +84,19 @@ export class TicketsController {
       'Run the ticket investigation pipeline live over Server-Sent Events: classify, retrieve relevant ' +
       'KB articles, diagnose, and propose a customer-facing action (subject to a later human approval ' +
       'gate). The pipeline runs for several seconds, so every call streams progress as it happens ' +
-      'rather than leaving the caller on a blocking loading screen.',
+      'rather than leaving the caller on a blocking loading screen. Streamed directly off the ' +
+      "LangGraph run's own per-node updates, not a separate event bus.",
   })
-  investigate(
-    @Param('id') ticketId: UUID,
-    @SseSignal() signal: AbortSignal,
-  ): Observable<MessageEvent> {
-    return SseProgressStreamUtil.build({
-      eventBus: this.eventBus,
-      eventType: TicketInvestigationProgressEvent,
-      matches: (event) => event.ticketId === ticketId,
-      mapProgress: (event) => ({ type: 'progress', data: { stage: event.stage, message: event.message } }),
-      execute: () => this.commandBus.execute<InvestigateTicketCommand, TicketInvestigationResponseDto>(
-        new InvestigateTicketCommand(ticketId, signal),
+  investigate(@Param('id') ticketId: UUID, @SseSignal() signal: AbortSignal): Observable<MessageEvent> {
+    return from(this.toMessageEvents(this.investigationGraph.investigateStream(ticketId, signal))).pipe(
+      timeout(INVESTIGATE_SSE_TIMEOUT_MS),
+      catchError((err: unknown) =>
+        of<MessageEvent>({
+          type: 'error',
+          data: { message: err instanceof Error ? err.message : 'Request failed' },
+        }),
       ),
-      mapResult: (investigation) => ({ type: 'result', data: investigation }),
-      abortSignal: signal,
-    });
+    );
   }
 
   @Post(':id/investigations/:investigationId/approvals')
@@ -130,5 +129,18 @@ export class TicketsController {
     @Param('investigationId') investigationId: UUID,
   ): Promise<TicketInvestigationResponseDto> {
     return this.commandBus.execute(new ExecuteTicketActionCommand(ticketId, investigationId));
+  }
+
+  private async *toMessageEvents(stream: AsyncGenerator<TicketInvestigationStreamEvent>): AsyncGenerator<MessageEvent> {
+    for await (const event of stream) {
+      if (event.type === 'result') {
+        yield {
+          type: 'result',
+          data: plainToInstance(TicketInvestigationResponseDto, event.investigation, { excludeExtraneousValues: true }),
+        };
+      } else {
+        yield { type: 'progress', data: { stage: event.stage, message: event.message } };
+      }
+    }
   }
 }

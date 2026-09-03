@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
-import type { TicketDiagnosisStepResult } from '../../../src/app/tickets/orchestrator/steps/ticket-diagnosis-step.service';
+import type { TicketInvestigationResult } from '../../../src/app/tickets/ticket-investigation-result.types';
 
-export const mockTicketDiagnosisStepResult = (
-  args: Partial<TicketDiagnosisStepResult> = {},
-): TicketDiagnosisStepResult => ({
+export const mockTicketInvestigationResult = (
+  args: Partial<TicketInvestigationResult> = {},
+): TicketInvestigationResult => ({
   retrievedChunkIds: [randomUUID()],
   diagnosis: 'Duplicate webhook delivery caused a double charge.',
   diagnosisConfidence: 0.9,

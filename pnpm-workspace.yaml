@@ -1,8 +1,13 @@
+overrides:
+  undici: 7.25.0
+
 allowBuilds:
   '@automock/adapters.nestjs': true
   '@scarf/scarf': true
   cpu-features: true
   esbuild: true
+  onnxruntime-node: true
   protobufjs: true
+  sharp: true
   ssh2: true
   unrs-resolver: true

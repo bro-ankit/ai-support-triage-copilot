@@ -9,7 +9,7 @@ import { TrackAiUsage } from '../../../metrics/track-ai-usage.decorator';
 import type { TicketSelect } from '../../../schema/tickets.schema';
 import { Traced } from '../../../tracing/traced.decorator';
 import { TicketInvestigationRepository } from '../repositories/ticket-investigation.repository';
-import type { TicketDiagnosisStepResult } from '../orchestrator/steps/ticket-diagnosis-step.service';
+import type { TicketInvestigationResult } from '../ticket-investigation-result.types';
 import { EPISODIC_MEMORY_DEFAULTS } from './episodic-memory.constants';
 import type { SimilarPastCase } from './episodic-memory.types';
 
@@ -40,7 +40,7 @@ export class EpisodicMemoryService {
   }
 
   @TrackAiUsage('EMBEDDING')
-  async embedEpisode(ticket: TicketSelect, result: TicketDiagnosisStepResult): Promise<number[] | null> {
+  async embedEpisode(ticket: TicketSelect, result: TicketInvestigationResult): Promise<number[] | null> {
     if (result.status !== 'completed') return null;
 
     const episodeText = [

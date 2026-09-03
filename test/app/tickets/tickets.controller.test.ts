@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
 import { INestApplication } from '@nestjs/common';
-import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { PassportModule } from '@nestjs/passport';
 import { Test } from '@nestjs/testing';
-import { Subject } from 'rxjs';
 import request from 'supertest';
 
 import { ApproveTicketActionCommand } from '../../../src/app/tickets/commands/approve-ticket-action.command';
@@ -12,15 +11,14 @@ import { CompleteTicketAttachmentUploadCommand } from '../../../src/app/tickets/
 import { CreateTicketCommand } from '../../../src/app/tickets/commands/create-ticket.command';
 import { ExecuteTicketActionCommand } from '../../../src/app/tickets/commands/execute-ticket-action.command';
 import { RequestTicketAttachmentUploadCommand } from '../../../src/app/tickets/commands/request-ticket-attachment-upload.command';
-import { TicketInvestigationProgressEvent } from '../../../src/app/tickets/events/ticket-investigation-progress.event';
+import { TicketInvestigationGraphService } from '../../../src/app/tickets/graph/ticket-investigation-graph.service';
+import type { TicketInvestigationStreamEvent } from '../../../src/app/tickets/graph/ticket-investigation-stream-event.types';
 import { GetTicketQuery } from '../../../src/app/tickets/queries/get-ticket.query';
 import { TicketsController } from '../../../src/app/tickets/tickets.controller';
 import { AUTH_SCOPES } from '../../../src/auth/auth.constants';
 import { JwtAuthGuard } from '../../../src/auth/guards/jwt-auth.guard';
 import { ScopesGuard } from '../../../src/auth/guards/scopes.guard';
 import { JwtStrategy } from '../../../src/auth/strategies/jwt.strategy';
-import { AuthMocks } from '../../__mocks__/auth/auth-mocks';
-import { MockJwtStrategy } from '../../__mocks__/auth/mock-jwt.strategy';
 import {
   mockCreateTicketRequestDto,
   mockRequestAttachmentUploadRequestDto,
@@ -28,9 +26,11 @@ import {
   mockTicketActionApprovalResponseDto,
   mockTicketAttachmentResponseDto,
   mockTicketInvestigationResponseDto,
+  mockTicketInvestigationSelect,
   mockTicketResponseDto,
 } from '../../__mocks__';
-import { InvestigateTicketCommand } from '../../../src/app/tickets/commands/investigate-ticket.command';
+import { AuthMocks } from '../../__mocks__/auth/auth-mocks';
+import { MockJwtStrategy } from '../../__mocks__/auth/mock-jwt.strategy';
 import { AssertUtils } from '../../utils/assert.utils';
 
 const TICKET_ID = randomUUID();
@@ -38,18 +38,22 @@ const ATTACHMENT_ID = randomUUID();
 const INVESTIGATION_ID = randomUUID();
 
 const MCP_TOKEN = AuthMocks.createMockToken(AuthMocks.buildMockUser({ scopes: [AUTH_SCOPES.MCP] }));
-const APPROVE_ACTIONS_TOKEN = AuthMocks.createMockToken(AuthMocks.buildMockUser({ scopes: [AUTH_SCOPES.APPROVE_ACTIONS] }));
+const APPROVE_ACTIONS_TOKEN = AuthMocks.createMockToken(
+  AuthMocks.buildMockUser({ scopes: [AUTH_SCOPES.APPROVE_ACTIONS] }),
+);
 const NO_SCOPE_TOKEN = AuthMocks.createMockToken(AuthMocks.buildMockUser({ scopes: [] }));
+
+async function* streamOf(events: TicketInvestigationStreamEvent[]): AsyncGenerator<TicketInvestigationStreamEvent> {
+  for (const event of events) yield event;
+}
 
 describe('TicketsController Test', () => {
   let app: INestApplication;
   const mockCommandBus = { execute: jest.fn() };
   const mockQueryBus = { execute: jest.fn() };
-  let eventBus: Subject<TicketInvestigationProgressEvent>;
+  const mockInvestigationGraph = { investigateStream: jest.fn() };
 
   beforeAll(async () => {
-    eventBus = new Subject<TicketInvestigationProgressEvent>();
-
     const moduleRef = await Test.createTestingModule({
       imports: [PassportModule.register({ defaultStrategy: 'jwt' })],
       controllers: [TicketsController],
@@ -59,7 +63,7 @@ describe('TicketsController Test', () => {
         JwtStrategy,
         { provide: CommandBus, useValue: mockCommandBus },
         { provide: QueryBus, useValue: mockQueryBus },
-        { provide: EventBus, useValue: eventBus },
+        { provide: TicketInvestigationGraphService, useValue: mockInvestigationGraph },
       ],
     })
       .overrideProvider(JwtStrategy)
@@ -131,9 +135,7 @@ describe('TicketsController Test', () => {
           .send(body)
           .expect(201);
 
-        expect(mockCommandBus.execute).toHaveBeenCalledWith(
-          new RequestTicketAttachmentUploadCommand(TICKET_ID, body),
-        );
+        expect(mockCommandBus.execute).toHaveBeenCalledWith(new RequestTicketAttachmentUploadCommand(TICKET_ID, body));
         expect(response.body).toEqual(commandResult);
       });
     });
@@ -184,20 +186,22 @@ describe('TicketsController Test', () => {
 
   describe('Given POST /tickets/:id/investigate endpoint', () => {
     describe('When called with no bearer token', () => {
-      test('Then it rejects with 401 without executing the command', async () => {
+      test('Then it rejects with 401 without starting the investigation stream', async () => {
         await request(app.getHttpServer()).post(`/tickets/${TICKET_ID}/investigate`).expect(401);
-        expect(mockCommandBus.execute).not.toHaveBeenCalled();
+        expect(mockInvestigationGraph.investigateStream).not.toHaveBeenCalled();
       });
     });
 
     describe('When the investigation succeeds', () => {
-      test('Then it streams progress events published on the event bus followed by a result event', async () => {
-        const investigation = mockTicketInvestigationResponseDto({ id: randomUUID() });
-        mockCommandBus.execute.mockImplementation(async () => {
-          eventBus.next(new TicketInvestigationProgressEvent(TICKET_ID, 'context_loaded', 'Loaded context'));
-          eventBus.next(new TicketInvestigationProgressEvent(TICKET_ID, 'classified', 'Classified ticket'));
-          return investigation;
-        });
+      test("Then it streams the graph's progress events followed by a mapped result event", async () => {
+        const investigation = mockTicketInvestigationSelect({ id: randomUUID() });
+        mockInvestigationGraph.investigateStream.mockReturnValue(
+          streamOf([
+            { type: 'progress', stage: 'context_loaded', message: 'Loaded context' },
+            { type: 'progress', stage: 'classified', message: 'Classified ticket' },
+            { type: 'result', investigation },
+          ]),
+        );
 
         const response = await request(app.getHttpServer())
           .post(`/tickets/${TICKET_ID}/investigate`)
@@ -205,42 +209,32 @@ describe('TicketsController Test', () => {
           .expect(201)
           .expect('Content-Type', /text\/event-stream/);
 
-        expect(mockCommandBus.execute).toHaveBeenCalledWith(
-          new InvestigateTicketCommand(TICKET_ID, expect.any(AbortSignal)),
-        );
+        expect(mockInvestigationGraph.investigateStream).toHaveBeenCalledWith(TICKET_ID, expect.any(AbortSignal));
         AssertUtils.assertSseEvents(response.text, [
           { event: 'progress', data: { stage: 'context_loaded', message: 'Loaded context' } },
           { event: 'progress', data: { stage: 'classified', message: 'Classified ticket' } },
-          { event: 'result', data: { ...investigation, createdAt: investigation.createdAt.toISOString() } },
-        ]);
-      });
-    });
-
-    describe('When another ticket\'s progress event is published concurrently', () => {
-      test('Then it only streams progress events for the requested ticket', async () => {
-        const investigation = mockTicketInvestigationResponseDto({ id: randomUUID() });
-        const otherTicketId = randomUUID();
-        mockCommandBus.execute.mockImplementation(async () => {
-          eventBus.next(new TicketInvestigationProgressEvent(otherTicketId, 'context_loaded', 'Other ticket'));
-          eventBus.next(new TicketInvestigationProgressEvent(TICKET_ID, 'context_loaded', 'This ticket'));
-          return investigation;
-        });
-
-        const response = await request(app.getHttpServer())
-          .post(`/tickets/${TICKET_ID}/investigate`)
-          .set('Authorization', `Bearer ${MCP_TOKEN}`)
-          .expect(201);
-
-        AssertUtils.assertSseEvents(response.text, [
-          { event: 'progress', data: { stage: 'context_loaded', message: 'This ticket' } },
-          { event: 'result', data: { ...investigation, createdAt: investigation.createdAt.toISOString() } },
+          {
+            event: 'result',
+            data: {
+              id: investigation.id,
+              retrievedChunkIds: investigation.retrievedChunkIds,
+              diagnosis: investigation.diagnosis,
+              diagnosisConfidence: investigation.diagnosisConfidence,
+              proposedAction: investigation.proposedAction,
+              proposedActionReasoning: investigation.proposedActionReasoning,
+              status: investigation.status,
+              createdAt: investigation.createdAt.toISOString(),
+            },
+          },
         ]);
       });
     });
 
     describe('When the investigation fails', () => {
       test('Then it streams an error event instead of a result event', async () => {
-        mockCommandBus.execute.mockRejectedValue(new Error('Ticket not found'));
+        mockInvestigationGraph.investigateStream.mockReturnValue({
+          [Symbol.asyncIterator]: () => ({ next: () => Promise.reject(new Error('Ticket not found')) }),
+        });
 
         const response = await request(app.getHttpServer())
           .post(`/tickets/${TICKET_ID}/investigate`)
@@ -273,7 +267,7 @@ describe('TicketsController Test', () => {
     });
 
     describe('When called with a valid approve_actions-scoped token', () => {
-      test('Then it executes ApproveTicketActionCommand with the caller\'s userId and returns the approval', async () => {
+      test("Then it executes ApproveTicketActionCommand with the caller's userId and returns the approval", async () => {
         const approval = mockTicketActionApprovalResponseDto({ ticketInvestigationId: INVESTIGATION_ID });
         mockCommandBus.execute.mockResolvedValue(approval);
 
@@ -314,7 +308,9 @@ describe('TicketsController Test', () => {
           .set('Authorization', `Bearer ${NO_SCOPE_TOKEN}`)
           .expect(201);
 
-        expect(mockCommandBus.execute).toHaveBeenCalledWith(new ExecuteTicketActionCommand(TICKET_ID, INVESTIGATION_ID));
+        expect(mockCommandBus.execute).toHaveBeenCalledWith(
+          new ExecuteTicketActionCommand(TICKET_ID, INVESTIGATION_ID),
+        );
         expect(response.body).toEqual({ ...investigation, createdAt: investigation.createdAt.toISOString() });
       });
     });
