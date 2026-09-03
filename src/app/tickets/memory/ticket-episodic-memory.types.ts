@@ -2,7 +2,7 @@ import type { UUID } from 'node:crypto';
 
 import type { TicketProposedAction } from '../../../schema/ticket-investigations.schema';
 
-export type SimilarPastCase = {
+export type SimilarPastTicketCase = {
   ticketId: UUID;
   subject: string;
   description: string | null;

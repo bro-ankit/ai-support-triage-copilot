@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
-import type { SimilarPastCase } from '../../../src/app/tickets/memory/episodic-memory.types';
+import type { SimilarPastTicketCase } from '../../../src/app/tickets/memory/ticket-episodic-memory.types';
 
-export const mockSimilarPastCase = (args: Partial<SimilarPastCase> = {}): SimilarPastCase => ({
+export const mockSimilarPastCase = (args: Partial<SimilarPastTicketCase> = {}): SimilarPastTicketCase => ({
   ticketId: randomUUID(),
   subject: 'Charged twice for order #1234',
   description: 'Please refund the duplicate charge.',

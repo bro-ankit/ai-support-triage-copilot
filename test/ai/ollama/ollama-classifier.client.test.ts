@@ -1,8 +1,8 @@
 import { TestBed } from '@automock/jest';
 import { ConfigService } from '@nestjs/config';
 
-import { OllamaClassifierClient } from '../../../src/ai/ollama/ollama-classifier.client';
 import { OLLAMA_DEFAULTS, OLLAMA_ERRORS } from '../../../src/ai/ollama/ollama.constants';
+import { OllamaClassifierClient } from '../../../src/ai/ollama/ollama-classifier.client';
 import { AssertUtils } from '../../utils/assert.utils';
 
 const SYSTEM_PROMPT = 'Classify the ticket.';
@@ -20,7 +20,7 @@ describe('OllamaClassifierClient Unit Test', () => {
       .compile();
 
     sut = unit;
-    global.fetch = mockFetch as never;
+    global.fetch = mockFetch;
   });
 
   beforeEach(() => {

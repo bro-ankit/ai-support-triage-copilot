@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { ResilienceModule } from './resilience';
 import { StorageModule } from './storage/storage.module';
+import { EpisodicStoreModule } from './store/episodic-store.module';
 import { TracingModule } from './tracing/tracing.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { TracingModule } from './tracing/tracing.module';
     StorageModule,
     CacheModule,
     AuthModule,
+    EpisodicStoreModule,
   ],
 })
 export class CoreInfraModule {}

@@ -1,4 +1,6 @@
-import { and, eq, type Column, type SQL } from 'drizzle-orm';
+import type { UUID } from 'node:crypto';
+
+import { and, type Column, eq, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 
 import { TenantContextService } from '../auth/tenant-context.service';
@@ -12,14 +14,11 @@ export abstract class TenantScopedRepository<TTable extends PgTable & { id: Colu
     protected readonly db: DrizzleDb,
     protected readonly txContext: DrizzleTransactionContext,
     protected readonly tenantContext: TenantContextService,
-  ) { }
+  ) {}
 
   async insert(data: Omit<TTable['$inferInsert'], 'tenantId'>): Promise<TTable['$inferSelect']> {
     const client = this.getClient();
-    const [result] = await client
-      .insert(this.table)
-      .values(this.stampTenant(data) as never)
-      .returning();
+    const [result] = await client.insert(this.table).values(this.stampTenant(data)).returning();
 
     return result;
   }
@@ -42,8 +41,9 @@ export abstract class TenantScopedRepository<TTable extends PgTable & { id: Colu
     return and(eq(this.table.tenantId, this.tenantContext.getTenantId()), ...conditions);
   }
 
-  protected stampTenant<T extends object>(data: T): T & { tenantId: string } {
+  protected stampTenant(data: Omit<TTable['$inferInsert'], 'tenantId'>): TTable['$inferInsert'];
+  protected stampTenant<T extends Record<string, unknown>>(data: T): T & { tenantId: UUID };
+  protected stampTenant(data: Record<string, unknown>) {
     return { ...data, tenantId: this.tenantContext.getTenantId() };
   }
-
 }

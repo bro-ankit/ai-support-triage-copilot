@@ -1,6 +1,6 @@
+import type { CallToolResult, ListToolsResult, McpServer, ServerContext, Tool } from '@modelcontextprotocol/server';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
-import type { CallToolResult, ListToolsResult, McpServer, ServerContext, Tool } from '@modelcontextprotocol/server';
 
 import { MCP_SERVER } from './mcp.constants';
 import { MCP_TOOL_KEY, type McpToolMetadata } from './mcp-tool.decorator';
@@ -14,7 +14,7 @@ export class McpToolDiscoveryService implements OnModuleInit {
     private readonly scanner: MetadataScanner,
     private readonly reflector: Reflector,
     @Inject(MCP_SERVER) private readonly mcpServer: McpServer,
-  ) { }
+  ) {}
 
   onModuleInit() {
     for (const wrapper of this.discovery.getProviders()) {
@@ -34,8 +34,8 @@ export class McpToolDiscoveryService implements OnModuleInit {
 
         this.mcpServer.registerTool(
           meta.name,
-          { description: meta.description, inputSchema: meta.inputSchema as never, outputSchema: meta.outputSchema as never },
-          this.withScopeCheck(meta, handler.bind(instance)) as never,
+          { description: meta.description, inputSchema: meta.inputSchema, outputSchema: meta.outputSchema },
+          this.withScopeCheck(meta, handler.bind(instance)),
         );
         this.registeredTools.push(meta);
       });
@@ -67,7 +67,9 @@ export class McpToolDiscoveryService implements OnModuleInit {
       const missingScopes = requiredScopes.filter((scope) => !callerScopes.includes(scope));
       if (missingScopes.length > 0) {
         return {
-          content: [{ type: 'text', text: `Forbidden: tool "${meta.name}" requires scope(s): ${missingScopes.join(', ')}` }],
+          content: [
+            { type: 'text', text: `Forbidden: tool "${meta.name}" requires scope(s): ${missingScopes.join(', ')}` },
+          ],
           isError: true,
         };
       }

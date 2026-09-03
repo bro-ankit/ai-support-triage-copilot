@@ -1,0 +1,1 @@
+ALTER TABLE "ticket_investigations" DROP COLUMN "episode_embedding";

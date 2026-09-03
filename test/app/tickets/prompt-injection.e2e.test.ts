@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 
 import { GeminiClient } from '../../../src/ai/gemini/gemini.client';
 import { ProposeTicketActionAgent } from '../../../src/app/tickets/agents/propose-ticket-action.agent';
@@ -12,12 +14,12 @@ const noopLogger = { info: () => undefined, debug: () => undefined, warn: () => 
 
 function buildRealClient(): GeminiClient {
   const googleClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
-  const configStub = { get: (_key: string, fallback?: unknown) => fallback };
-  const metricsReporterStub = {} as MetricsReporter; // never invoked: no @TrackAiUsage context in this test
+  const configStub = { get: (_key: string, fallback?: unknown) => fallback } as ConfigService;
+  const metricsReporterStub = {} as MetricsReporter;
   return new GeminiClient(
-    noopLogger as never,
+    noopLogger as unknown as PinoLogger,
     googleClient,
-    configStub as never,
+    configStub,
     metricsReporterStub,
     new AiUsageContextService(),
   );

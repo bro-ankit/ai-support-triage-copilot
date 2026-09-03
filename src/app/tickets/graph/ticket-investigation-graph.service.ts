@@ -1,9 +1,11 @@
 import type { UUID } from 'node:crypto';
 
 import { END, START, StateGraph } from '@langchain/langgraph';
+import type { PostgresStore } from '@langchain/langgraph-checkpoint-postgres/store';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { EPISODIC_STORE } from '../../../store/episodic-store.constants';
 import { Traced } from '../../../tracing/traced.decorator';
 import type { InvestigationStage } from '../orchestrator/investigation-progress.types';
 import { TICKETS_ERRORS } from '../tickets.constants';
@@ -29,6 +31,7 @@ export class TicketInvestigationGraphService {
   constructor(
     @InjectPinoLogger(TicketInvestigationGraphService.name) private readonly logger: PinoLogger,
     @Inject(TICKET_INVESTIGATION_NODES) private readonly nodes: TicketInvestigationNodes,
+    @Inject(EPISODIC_STORE) private readonly episodicStore: PostgresStore,
   ) {
     this.graph = this.buildGraph();
   }
@@ -120,6 +123,6 @@ export class TicketInvestigationGraphService {
       })
       .addEdge('propose', 'persist')
       .addEdge('persist', END)
-      .compile();
+      .compile({ store: this.episodicStore });
   }
 }

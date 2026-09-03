@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "..",
     "types": ["node", "jest"],
-    "allowJs": true
+    "allowJs": true,
+    "isolatedModules": true
   },
   "include": ["**/*.ts", "../src/**/*"]
 }

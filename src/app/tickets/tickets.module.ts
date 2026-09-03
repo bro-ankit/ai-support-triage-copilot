@@ -23,7 +23,6 @@ import {
   type TicketInvestigationNodes,
 } from './graph/ticket-investigation-graph.constants';
 import { TicketInvestigationGraphService } from './graph/ticket-investigation-graph.service';
-import { EpisodicMemoryService } from './memory/episodic-memory.service';
 import { TicketClassificationStepService } from './orchestrator/steps/ticket-classification-step.service';
 import { TicketInvestigationContextService } from './orchestrator/ticket-investigation-context.service';
 import { TICKET_QUERY_HANDLERS } from './queries';
@@ -55,7 +54,6 @@ import { TicketsController } from './tickets.controller';
     },
     DiagnoseTicketAgent,
     ProposeTicketActionAgent,
-    EpisodicMemoryService,
     TicketInvestigationContextService,
     TicketClassificationStepService,
     LoadContextNode,

@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import type { CallToolResult } from '@modelcontextprotocol/server';
+import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { z } from 'zod';
 
@@ -8,9 +8,9 @@ import { KbSearchService } from '../../app/kb/search/kb-search.service';
 import { AUTH_SCOPES } from '../../auth/auth.constants';
 import { McpTool } from '../mcp-tool.decorator';
 
-const SearchKbInputSchema = {
+const SearchKbInputSchema = z.object({
   query: z.string().min(1).describe('The support question or issue description to search the knowledge base for'),
-};
+});
 
 const SearchKbOutputSchema = z.object({
   results: z.array(
@@ -26,7 +26,7 @@ const SearchKbOutputSchema = z.object({
 
 @Injectable()
 export class KbSearchMcpTool {
-  constructor(private readonly kbSearchService: KbSearchService) { }
+  constructor(private readonly kbSearchService: KbSearchService) {}
 
   @McpTool({
     name: 'search_kb',

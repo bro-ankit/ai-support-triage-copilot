@@ -37,7 +37,7 @@ export class KbChunkRepository extends TenantScopedRepository<typeof kbChunksTab
         batch.map((chunk) => ({
           ...this.stampTenant(chunk),
           contentTsv: sql`to_tsvector('english', ${chunk.content})`,
-        })) as never,
+        })),
       );
     }
   }

@@ -15,7 +15,6 @@ export const mockTicketInvestigationSelect = (
   proposedAction: 'refund',
   proposedActionReasoning: 'Confirmed duplicate charge for the same order.',
   status: 'completed',
-  episodeEmbedding: null,
   createdAt: new Date(),
   ...args,
 });

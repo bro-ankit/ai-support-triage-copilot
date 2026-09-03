@@ -1,6 +1,6 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { TestBed } from '@automock/jest';
+import { GetObjectCommand, type GetObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { ConfigService } from '@nestjs/config';
 
 import { S3StorageClient } from '../../../src/storage/s3/s3.client';
@@ -18,6 +18,7 @@ describe('S3StorageClient Unit Test', () => {
   let sut: S3StorageClient;
   let s3Client: jest.Mocked<S3Client>;
   const mockCreatePresignedPost = createPresignedPost as jest.MockedFunction<typeof createPresignedPost>;
+  let mockSend: jest.Mock<Promise<GetObjectCommandOutput>, [GetObjectCommand]>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(S3StorageClient)
@@ -27,6 +28,7 @@ describe('S3StorageClient Unit Test', () => {
 
     sut = unit;
     s3Client = unitRef.get<S3Client>(S3_CLIENT);
+    mockSend = s3Client.send as unknown as jest.Mock<Promise<GetObjectCommandOutput>, [GetObjectCommand]>;
   });
 
   beforeEach(() => {
@@ -58,14 +60,14 @@ describe('S3StorageClient Unit Test', () => {
   describe('Given getObject, When the object exists', () => {
     test('Then it fetches the object from the configured bucket and returns its bytes as a Buffer', async () => {
       const bytes = new Uint8Array([1, 2, 3]);
-      s3Client.send.mockResolvedValueOnce({
+      mockSend.mockResolvedValueOnce({
         Body: { transformToByteArray: jest.fn().mockResolvedValue(bytes) },
-      } as never);
+      } as unknown as GetObjectCommandOutput);
 
       const result = await sut.getObject(OBJECT_KEY);
 
       expect(result).toEqual(Buffer.from(bytes));
-      const command = s3Client.send.mock.calls[0][0] as GetObjectCommand;
+      const command = mockSend.mock.calls[0][0];
       expect(command).toBeInstanceOf(GetObjectCommand);
       expect(command.input).toEqual({ Bucket: BUCKET_NAME, Key: OBJECT_KEY });
     });
@@ -73,7 +75,7 @@ describe('S3StorageClient Unit Test', () => {
 
   describe('Given getObject, When the response body is empty', () => {
     test('Then it returns an empty Buffer', async () => {
-      s3Client.send.mockResolvedValueOnce({ Body: undefined } as never);
+      mockSend.mockResolvedValueOnce({ Body: undefined } as unknown as GetObjectCommandOutput);
 
       const result = await sut.getObject(OBJECT_KEY);
 

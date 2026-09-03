@@ -6,7 +6,7 @@ import type { KbChunkSelect } from '../../../schema/kb-chunks.schema';
 import type { TicketInvestigationSelect } from '../../../schema/ticket-investigations.schema';
 import type { TicketSelect } from '../../../schema/tickets.schema';
 import type { DiagnoseTicketResponse } from '../agents/diagnose-ticket.agent';
-import type { SimilarPastCase } from '../memory/episodic-memory.types';
+import type { SimilarPastTicketCase } from '../memory/ticket-episodic-memory.types';
 import type { TicketInvestigationResult } from '../ticket-investigation-result.types';
 
 export const TicketInvestigationState = Annotation.Root({
@@ -14,7 +14,7 @@ export const TicketInvestigationState = Annotation.Root({
   ticket: Annotation<TicketSelect>({ default: () => undefined as unknown as TicketSelect, reducer: (_, b) => b }),
   attachmentText: Annotation<string>({ default: () => '', reducer: (_, b) => b }),
   searchQuery: Annotation<string>({ default: () => '', reducer: (_, b) => b }),
-  pastCases: Annotation<SimilarPastCase[]>({ default: () => [], reducer: (_, b) => b }),
+  pastCases: Annotation<SimilarPastTicketCase[]>({ default: () => [], reducer: (_, b) => b }),
   kbChunks: Annotation<KbChunkSelect[]>({ default: () => [], reducer: (_, b) => b }),
   retrievedChunkIds: Annotation<UUID[]>({ default: () => [], reducer: (_, b) => b }),
   diagnosis: Annotation<DiagnoseTicketResponse | null>({ default: () => null, reducer: (_, b) => b }),

@@ -43,6 +43,13 @@
       "when": 1788318970700,
       "tag": "0005_useful_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788413329211,
+      "tag": "0006_nifty_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,8 @@
 import { Reflector } from '@nestjs/core';
 import { z } from 'zod';
 
-import { MCP_TOOL_KEY, McpTool, type McpToolMetadata } from '../../src/mcp/mcp-tool.decorator';
 import { AUTH_SCOPES } from '../../src/auth/auth.constants';
+import { MCP_TOOL_KEY, McpTool, type McpToolMetadata } from '../../src/mcp/mcp-tool.decorator';
 
 describe('McpTool decorator', () => {
   describe('Given a method decorated with @McpTool', () => {
@@ -11,7 +11,7 @@ describe('McpTool decorator', () => {
         const metadata: McpToolMetadata = {
           name: 'do_thing',
           description: 'Does a thing',
-          inputSchema: { query: z.string() },
+          inputSchema: z.object({ query: z.string() }),
           requiredScopes: [AUTH_SCOPES.MCP],
         };
 

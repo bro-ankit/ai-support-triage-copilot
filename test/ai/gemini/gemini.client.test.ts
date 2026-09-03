@@ -1,5 +1,5 @@
 import { TestBed } from '@automock/jest';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { GenerativeModel, GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -90,7 +90,7 @@ describe('GeminiClient Unit Test', () => {
       embedContent: mockEmbedContent,
       startChat: mockStartChat,
       generateContentStream: mockGenerateContentStream,
-    } as never);
+    } as unknown as GenerativeModel);
     usageContext.getOperation.mockReturnValue(undefined);
   });
 
