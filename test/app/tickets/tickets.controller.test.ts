@@ -218,6 +218,7 @@ describe('TicketsController Test', () => {
             data: {
               id: investigation.id,
               retrievedChunkIds: investigation.retrievedChunkIds,
+              citedChunkIds: investigation.citedChunkIds,
               diagnosis: investigation.diagnosis,
               diagnosisConfidence: investigation.diagnosisConfidence,
               proposedAction: investigation.proposedAction,

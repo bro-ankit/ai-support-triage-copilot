@@ -13,6 +13,7 @@ export const mockTicketInvestigationGraphState = (
   ticket: mockTicketSelect(),
   diagnosis: mockDiagnoseTicketResponse(),
   retrievedChunkIds: [],
+  citedChunkIds: [],
   attachmentText: '',
   searchQuery: '',
   pastCases: [],

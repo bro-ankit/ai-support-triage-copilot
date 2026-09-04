@@ -17,6 +17,7 @@ export const TicketInvestigationState = Annotation.Root({
   pastCases: Annotation<SimilarPastTicketCase[]>({ default: () => [], reducer: (_, b) => b }),
   kbChunks: Annotation<KbChunkSelect[]>({ default: () => [], reducer: (_, b) => b }),
   retrievedChunkIds: Annotation<UUID[]>({ default: () => [], reducer: (_, b) => b }),
+  citedChunkIds: Annotation<UUID[]>({ default: () => [], reducer: (_, b) => b }),
   diagnosis: Annotation<DiagnoseTicketResponse | null>({ default: () => null, reducer: (_, b) => b }),
   earlyResult: Annotation<TicketInvestigationResult | undefined>({ default: () => undefined, reducer: (_, b) => b }),
   investigation: Annotation<TicketInvestigationSelect | undefined>({ default: () => undefined, reducer: (_, b) => b }),

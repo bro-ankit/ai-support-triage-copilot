@@ -42,20 +42,23 @@ describe('DiagnoseNode Unit Test', () => {
 
   describe('Given run', () => {
     describe('When diagnosis succeeds and clears the confidence threshold', () => {
-      test('Then it diagnoses using the KB findings and formatted past cases, and returns the diagnosis without an early result', async () => {
+      test('Then it diagnoses using the labeled KB findings and formatted past cases, and returns the diagnosis and cited chunk ids without an early result', async () => {
         const pastCase = mockSimilarPastCase();
-        const diagnosis = mockDiagnoseTicketResponse({ confidence: 0.9 });
+        const diagnosis = mockDiagnoseTicketResponse({
+          confidence: 0.9,
+          diagnosis: 'Duplicate webhook delivery caused a double charge. [[KB1]]',
+        });
         diagnoseTicketAgent.diagnose.mockResolvedValue(diagnosis);
 
         const result = await sut.run(mockTicketInvestigationGraphState({ ...STATE, pastCases: [pastCase] }));
 
         expect(diagnoseTicketAgent.diagnose).toHaveBeenCalledWith(
           TICKET,
-          CHUNK.content,
+          `[[KB1]] ${CHUNK.content}`,
           `Past ticket: ${pastCase.subject}\nDescription: ${pastCase.description}\n` +
             `Diagnosis: ${pastCase.diagnosis}\nResolution: ${pastCase.proposedAction}`,
         );
-        expect(result).toEqual({ diagnosis });
+        expect(result).toEqual({ diagnosis, citedChunkIds: [CHUNK.id] });
       });
     });
 
@@ -68,7 +71,23 @@ describe('DiagnoseNode Unit Test', () => {
 
         expect(result).toEqual({
           diagnosis,
-          earlyResult: TicketInvestigationResultUtil.needsReviewResult(RETRIEVED_CHUNK_IDS, diagnosis),
+          citedChunkIds: [],
+          earlyResult: TicketInvestigationResultUtil.needsReviewResult(RETRIEVED_CHUNK_IDS, diagnosis, []),
+        });
+      });
+    });
+
+    describe('When diagnosis succeeds, clears the confidence threshold, but cites no retrieved KB chunk', () => {
+      test('Then it returns an early needs_review result with empty cited chunk ids', async () => {
+        const diagnosis = mockDiagnoseTicketResponse({ confidence: 0.9 });
+        diagnoseTicketAgent.diagnose.mockResolvedValue(diagnosis);
+
+        const result = await sut.run(STATE);
+
+        expect(result).toEqual({
+          diagnosis,
+          citedChunkIds: [],
+          earlyResult: TicketInvestigationResultUtil.needsReviewResult(RETRIEVED_CHUNK_IDS, diagnosis, []),
         });
       });
     });

@@ -7,6 +7,7 @@ export class TicketInvestigationResultUtil {
   static noFindingsResult(): TicketInvestigationResult {
     return {
       retrievedChunkIds: [],
+      citedChunkIds: [],
       diagnosis: 'No relevant knowledge-base articles were found for this ticket.',
       diagnosisConfidence: 0,
       proposedAction: null,
@@ -18,6 +19,7 @@ export class TicketInvestigationResultUtil {
   static diagnosisFailedResult(retrievedChunkIds: UUID[]): TicketInvestigationResult {
     return {
       retrievedChunkIds,
+      citedChunkIds: [],
       diagnosis: '(diagnosis failed, see logs for the underlying error)',
       diagnosisConfidence: 0,
       proposedAction: null,
@@ -26,9 +28,14 @@ export class TicketInvestigationResultUtil {
     };
   }
 
-  static needsReviewResult(retrievedChunkIds: UUID[], diagnosis: DiagnoseTicketResponse): TicketInvestigationResult {
+  static needsReviewResult(
+    retrievedChunkIds: UUID[],
+    diagnosis: DiagnoseTicketResponse,
+    citedChunkIds: UUID[] = [],
+  ): TicketInvestigationResult {
     return {
       retrievedChunkIds,
+      citedChunkIds,
       diagnosis: diagnosis.diagnosis,
       diagnosisConfidence: diagnosis.confidence,
       proposedAction: null,

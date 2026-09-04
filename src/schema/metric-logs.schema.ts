@@ -9,6 +9,7 @@ export const METRIC_OPERATIONS = [
   'TICKET_CLASSIFY',
   'TICKET_DIAGNOSE',
   'TICKET_PROPOSE_ACTION',
+  'TICKET_MULTI_HOP_QUERY',
 ] as const;
 export type MetricOperation = (typeof METRIC_OPERATIONS)[number];
 

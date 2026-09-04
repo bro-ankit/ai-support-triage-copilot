@@ -13,6 +13,10 @@ export class TicketInvestigationResponseDto {
   retrievedChunkIds!: string[];
 
   @Expose()
+  @ApiProperty({ type: [String], format: 'uuid' })
+  citedChunkIds!: string[];
+
+  @Expose()
   @ApiProperty({ type: String })
   diagnosis!: string;
 

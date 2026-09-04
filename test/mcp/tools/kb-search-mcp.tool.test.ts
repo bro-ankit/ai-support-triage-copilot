@@ -36,7 +36,7 @@ describe('KbSearchMcpTool', () => {
     describe('When KbSearchService returns results', () => {
       test('Then it delegates to KbSearchService.search and returns both text content and structuredContent matching outputSchema', async () => {
         const chunk = mockKbChunkSelect({ content: 'Webhook retries must be idempotent.' });
-        kbSearchService.search.mockResolvedValue([chunk]);
+        kbSearchService.search.mockResolvedValue({ chunks: [chunk], isConfident: true });
 
         const result = await sut.searchKb({ query: 'webhook retries' });
 
@@ -59,7 +59,7 @@ describe('KbSearchMcpTool', () => {
 
     describe('When KbSearchService returns no results', () => {
       test('Then it still returns a valid CallToolResult with an empty results array', async () => {
-        kbSearchService.search.mockResolvedValue([]);
+        kbSearchService.search.mockResolvedValue({ chunks: [], isConfident: true });
 
         const result = await sut.searchKb({ query: 'nothing matches' });
 

@@ -15,7 +15,7 @@ export class KbSearchQueryHandler implements IQueryHandler<KbSearchQuery, KbSear
 
   async execute(query: KbSearchQuery): Promise<KbSearchResultDto[]> {
     this.logger.debug({ q: query.q }, 'Executing KB search query');
-    const chunks = await this.kbSearchService.search(query.q);
+    const { chunks } = await this.kbSearchService.search(query.q);
     return plainToInstance(KbSearchResultDto, chunks, { excludeExtraneousValues: true });
   }
 }

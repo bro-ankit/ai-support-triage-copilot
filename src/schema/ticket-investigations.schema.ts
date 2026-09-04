@@ -20,6 +20,7 @@ export const ticketInvestigationsTable = pgTable('ticket_investigations', {
     .notNull()
     .references(() => ticketsTable.id, { onDelete: 'cascade' }),
   retrievedChunkIds: jsonb('retrieved_chunk_ids').$type<UUID[]>().notNull(),
+  citedChunkIds: jsonb('cited_chunk_ids').$type<UUID[]>().notNull(),
   diagnosis: text('diagnosis').notNull(),
   diagnosisConfidence: doublePrecision('diagnosis_confidence').notNull(),
   proposedAction: text('proposed_action').$type<TicketProposedAction>(),

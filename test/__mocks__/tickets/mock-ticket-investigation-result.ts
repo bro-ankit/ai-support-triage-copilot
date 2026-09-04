@@ -6,6 +6,7 @@ export const mockTicketInvestigationResult = (
   args: Partial<TicketInvestigationResult> = {},
 ): TicketInvestigationResult => ({
   retrievedChunkIds: [randomUUID()],
+  citedChunkIds: [randomUUID()],
   diagnosis: 'Duplicate webhook delivery caused a double charge.',
   diagnosisConfidence: 0.9,
   proposedAction: 'refund',

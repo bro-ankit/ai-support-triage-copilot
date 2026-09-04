@@ -6,9 +6,9 @@ import { AI_CLIENT } from '../../../../src/ai/ai.constants';
 import type { IAiClient } from '../../../../src/ai/ai.interface';
 import { KbChunkRepository } from '../../../../src/app/kb/repositories/kb-chunk.repository';
 import { KbRerankerService } from '../../../../src/app/kb/search/kb-reranker.service';
-import { KbSearchCacheService } from '../../../../src/app/kb/search/kb-search-cache.service';
 import { SEARCH_DEFAULTS } from '../../../../src/app/kb/search/kb-search.constants';
 import { KbSearchService } from '../../../../src/app/kb/search/kb-search.service';
+import { KbSearchCacheService } from '../../../../src/app/kb/search/kb-search-cache.service';
 import { mockKbChunkSelect } from '../../../__mocks__';
 
 const QUERY = 'why is the checkout webhook not idempotent';
@@ -78,7 +78,7 @@ describe('KbSearchService Unit Test', () => {
           { id: CHUNK_C_ID, text: CHUNK_C.content },
         ]);
         expect(kbSearchCacheService.store).toHaveBeenCalledWith(EMBEDDING, [CHUNK_B, CHUNK_A, CHUNK_C]);
-        expect(result).toEqual([CHUNK_B, CHUNK_A, CHUNK_C]);
+        expect(result).toEqual({ chunks: [CHUNK_B, CHUNK_A, CHUNK_C], isConfident: true });
       });
     });
 
@@ -95,7 +95,7 @@ describe('KbSearchService Unit Test', () => {
         expect(kbChunkRepository.findByLexical).not.toHaveBeenCalled();
         expect(kbRerankerService.rerank).not.toHaveBeenCalled();
         expect(kbSearchCacheService.store).not.toHaveBeenCalled();
-        expect(result).toEqual(cachedResults);
+        expect(result).toEqual({ chunks: cachedResults, isConfident: true });
       });
     });
 
@@ -113,7 +113,7 @@ describe('KbSearchService Unit Test', () => {
 
         const result = await sut.search(QUERY);
 
-        expect(result).toEqual([CHUNK_D, CHUNK_A, CHUNK_B]);
+        expect(result).toEqual({ chunks: [CHUNK_D, CHUNK_A, CHUNK_B], isConfident: true });
       });
     });
 
@@ -124,7 +124,7 @@ describe('KbSearchService Unit Test', () => {
 
         const result = await sut.search(QUERY);
 
-        expect(result).toEqual([]);
+        expect(result).toEqual({ chunks: [], isConfident: false });
         expect(kbChunkRepository.findByIds).not.toHaveBeenCalled();
         expect(kbRerankerService.rerank).not.toHaveBeenCalled();
         expect(kbSearchCacheService.store).toHaveBeenCalledWith(EMBEDDING, []);
@@ -143,7 +143,20 @@ describe('KbSearchService Unit Test', () => {
 
         const result = await sut.search(QUERY);
 
-        expect(result).toEqual([CHUNK_A]);
+        expect(result).toEqual({ chunks: [CHUNK_A], isConfident: true });
+      });
+    });
+
+    describe('When the top rerank score is below the multi-hop confidence threshold', () => {
+      test('Then it returns isConfident false alongside the chunks', async () => {
+        kbChunkRepository.findSimilarIds.mockResolvedValue([CHUNK_A_ID]);
+        kbChunkRepository.findByLexical.mockResolvedValue([]);
+        kbChunkRepository.findByIds.mockResolvedValue([CHUNK_A]);
+        kbRerankerService.rerank.mockResolvedValue([{ id: CHUNK_A_ID, score: -0.5 }]);
+
+        const result = await sut.search(QUERY);
+
+        expect(result).toEqual({ chunks: [CHUNK_A], isConfident: false });
       });
     });
   });

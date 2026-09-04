@@ -10,6 +10,7 @@ export const mockTicketInvestigationInsert = (
   tenantId: MOCK_TENANT_ID,
   ticketId: randomUUID(),
   retrievedChunkIds: [randomUUID()],
+  citedChunkIds: [randomUUID()],
   diagnosis: 'Duplicate webhook delivery caused a double charge.',
   diagnosisConfidence: 0.9,
   proposedAction: 'refund',

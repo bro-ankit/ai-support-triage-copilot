@@ -36,7 +36,7 @@ export class KbSearchMcpTool {
     requiredScopes: [AUTH_SCOPES.MCP],
   })
   async searchKb({ query }: { query: string }): Promise<CallToolResult> {
-    const chunks = await this.kbSearchService.search(query);
+    const { chunks } = await this.kbSearchService.search(query);
     const results = plainToInstance(KbSearchResultDto, chunks, { excludeExtraneousValues: true });
 
     return {

@@ -31,6 +31,7 @@ async function bootstrap(): Promise<void> {
     .setTitle('AI Support Triage Copilot API')
     .setDescription('Multi-modal support ticket triage, live investigation, and gated remediation actions')
     .setVersion('1')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

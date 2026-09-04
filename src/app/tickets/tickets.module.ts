@@ -4,6 +4,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { OllamaModule } from '../../ai/ollama/ollama.module';
 import { KbModule } from '../kb/kb.module';
 import { DiagnoseTicketAgent } from './agents/diagnose-ticket.agent';
+import { MultiHopQueryAgent } from './agents/multi-hop-query.agent';
 import { ProposeTicketActionAgent } from './agents/propose-ticket-action.agent';
 import { GeminiTicketClassifier } from './classification/gemini-ticket-classifier';
 import { OllamaTicketClassifier } from './classification/ollama-ticket-classifier';
@@ -54,6 +55,7 @@ import { TicketsController } from './tickets.controller';
     },
     DiagnoseTicketAgent,
     ProposeTicketActionAgent,
+    MultiHopQueryAgent,
     TicketInvestigationContextService,
     TicketClassificationStepService,
     LoadContextNode,

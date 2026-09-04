@@ -16,6 +16,7 @@ import { AssertUtils } from '../../../../utils/assert.utils';
 const TICKET_ID = randomUUID();
 const TICKET = mockTicketSelect({ id: TICKET_ID });
 const RETRIEVED_CHUNK_IDS = [randomUUID()];
+const CITED_CHUNK_IDS = [randomUUID()];
 const DIAGNOSIS = mockDiagnoseTicketResponse({ confidence: 0.9 });
 
 describe('ProposeNode Unit Test', () => {
@@ -38,6 +39,7 @@ describe('ProposeNode Unit Test', () => {
     ticket: TICKET,
     diagnosis: DIAGNOSIS,
     retrievedChunkIds: RETRIEVED_CHUNK_IDS,
+    citedChunkIds: CITED_CHUNK_IDS,
   });
 
   describe('Given run', () => {
@@ -52,6 +54,7 @@ describe('ProposeNode Unit Test', () => {
         expect(result).toEqual({
           earlyResult: {
             retrievedChunkIds: RETRIEVED_CHUNK_IDS,
+            citedChunkIds: CITED_CHUNK_IDS,
             diagnosis: DIAGNOSIS.diagnosis,
             diagnosisConfidence: DIAGNOSIS.confidence,
             proposedAction: proposal.action,
@@ -69,7 +72,7 @@ describe('ProposeNode Unit Test', () => {
         const result = await sut.run(STATE);
 
         expect(result).toEqual({
-          earlyResult: TicketInvestigationResultUtil.needsReviewResult(RETRIEVED_CHUNK_IDS, DIAGNOSIS),
+          earlyResult: TicketInvestigationResultUtil.needsReviewResult(RETRIEVED_CHUNK_IDS, DIAGNOSIS, CITED_CHUNK_IDS),
         });
       });
     });

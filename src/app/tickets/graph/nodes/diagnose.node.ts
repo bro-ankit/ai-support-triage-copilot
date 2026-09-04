@@ -6,6 +6,7 @@ import { DiagnoseTicketAgent, type DiagnoseTicketResponse } from '../../agents/d
 import type { TicketInvestigationGraphState } from '../ticket-investigation.state';
 import type { ITicketInvestigationNode } from '../ticket-investigation-node.interface';
 import { TicketInvestigationResultUtil } from '../ticket-investigation-result.util';
+import { KbCitationUtil } from './kb-citation.util';
 
 @Injectable()
 export class DiagnoseNode implements ITicketInvestigationNode {
@@ -28,10 +29,13 @@ export class DiagnoseNode implements ITicketInvestigationNode {
       );
     }
 
-    const diagnosis = await this.diagnoseSafely(state);
+    const { text: kbFindingsText, labelToChunkId } = KbCitationUtil.buildLabeledFindings(state.kbChunks);
+    const diagnosis = await this.diagnoseSafely(state, kbFindingsText);
     if (!diagnosis) {
       return { earlyResult: TicketInvestigationResultUtil.diagnosisFailedResult(state.retrievedChunkIds) };
     }
+
+    const citedChunkIds = KbCitationUtil.extractCitedChunkIds(diagnosis.diagnosis, labelToChunkId);
 
     if (diagnosis.confidence < DiagnoseNode.DIAGNOSIS_CONFIDENCE_THRESHOLD) {
       this.logger.warn(
@@ -40,14 +44,27 @@ export class DiagnoseNode implements ITicketInvestigationNode {
       );
       return {
         diagnosis,
-        earlyResult: TicketInvestigationResultUtil.needsReviewResult(state.retrievedChunkIds, diagnosis),
+        citedChunkIds,
+        earlyResult: TicketInvestigationResultUtil.needsReviewResult(state.retrievedChunkIds, diagnosis, citedChunkIds),
       };
     }
-    return { diagnosis };
+
+    if (state.kbChunks.length > 0 && citedChunkIds.length === 0) {
+      this.logger.warn({ ticketId: state.ticketId }, 'Diagnosis cited no retrieved KB chunks, skipping propose-action');
+      return {
+        diagnosis,
+        citedChunkIds,
+        earlyResult: TicketInvestigationResultUtil.needsReviewResult(state.retrievedChunkIds, diagnosis, citedChunkIds),
+      };
+    }
+
+    return { diagnosis, citedChunkIds };
   }
 
-  private async diagnoseSafely(state: TicketInvestigationGraphState): Promise<DiagnoseTicketResponse | null> {
-    const kbFindingsText = state.kbChunks.map((c) => c.content).join('\n\n---\n\n');
+  private async diagnoseSafely(
+    state: TicketInvestigationGraphState,
+    kbFindingsText: string,
+  ): Promise<DiagnoseTicketResponse | null> {
     const pastCasesText = this.formatPastCases(state.pastCases);
     try {
       return await this.diagnoseTicketAgent.diagnose(state.ticket, kbFindingsText, pastCasesText);

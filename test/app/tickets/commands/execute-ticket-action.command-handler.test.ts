@@ -4,9 +4,9 @@ import { TestBed } from '@automock/jest';
 
 import { ExecuteTicketActionCommand } from '../../../../src/app/tickets/commands/execute-ticket-action.command';
 import { ExecuteTicketActionCommandHandler } from '../../../../src/app/tickets/commands/execute-ticket-action.command-handler';
+import { TicketRepository } from '../../../../src/app/tickets/repositories/ticket.repository';
 import { TicketActionApprovalRepository } from '../../../../src/app/tickets/repositories/ticket-action-approval.repository';
 import { TicketInvestigationRepository } from '../../../../src/app/tickets/repositories/ticket-investigation.repository';
-import { TicketRepository } from '../../../../src/app/tickets/repositories/ticket.repository';
 import { TICKETS_ERRORS } from '../../../../src/app/tickets/tickets.constants';
 import { DrizzleTransactionService } from '../../../../src/database/drizzle-transaction.service';
 import { mockTicketActionApprovalSelect, mockTicketInvestigationSelect, mockTicketSelect } from '../../../__mocks__';
@@ -111,6 +111,7 @@ describe('ExecuteTicketActionCommandHandler Unit Test', () => {
         expect(result).toEqual({
           id: executedInvestigation.id,
           retrievedChunkIds: executedInvestigation.retrievedChunkIds,
+          citedChunkIds: executedInvestigation.citedChunkIds,
           diagnosis: executedInvestigation.diagnosis,
           diagnosisConfidence: executedInvestigation.diagnosisConfidence,
           proposedAction: executedInvestigation.proposedAction,

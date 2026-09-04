@@ -52,6 +52,7 @@ describe('TicketInvestigationRepository IT', () => {
           tenantId: MOCK_TENANT_ID,
           ticketId,
           retrievedChunkIds: data.retrievedChunkIds,
+          citedChunkIds: data.citedChunkIds,
           diagnosis: data.diagnosis,
           diagnosisConfidence: data.diagnosisConfidence,
           proposedAction: null,

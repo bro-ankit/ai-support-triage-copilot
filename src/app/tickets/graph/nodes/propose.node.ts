@@ -23,13 +23,20 @@ export class ProposeNode implements ITicketInvestigationNode {
 
     const proposal = await this.proposeSafely(state.ticketId, state.ticket, state.diagnosis);
     if (!proposal) {
-      return { earlyResult: TicketInvestigationResultUtil.needsReviewResult(state.retrievedChunkIds, state.diagnosis) };
+      return {
+        earlyResult: TicketInvestigationResultUtil.needsReviewResult(
+          state.retrievedChunkIds,
+          state.diagnosis,
+          state.citedChunkIds,
+        ),
+      };
     }
 
     this.logger.info({ ticketId: state.ticketId, action: proposal.action }, 'Propose-action step complete');
     return {
       earlyResult: {
         retrievedChunkIds: state.retrievedChunkIds,
+        citedChunkIds: state.citedChunkIds,
         diagnosis: state.diagnosis.diagnosis,
         diagnosisConfidence: state.diagnosis.confidence,
         proposedAction: proposal.action,

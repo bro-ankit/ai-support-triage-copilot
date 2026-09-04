@@ -29,7 +29,7 @@ describe('KbSearchQueryHandler Unit Test', () => {
   describe('Given execute', () => {
     describe('When called with a search query', () => {
       test('Then it searches with the query text and returns the chunks serialized as KbSearchResultDto', async () => {
-        kbSearchService.search.mockResolvedValue([CHUNK]);
+        kbSearchService.search.mockResolvedValue({ chunks: [CHUNK], isConfident: true });
 
         const result = await sut.execute(new KbSearchQuery(QUERY_TEXT));
 
@@ -48,7 +48,7 @@ describe('KbSearchQueryHandler Unit Test', () => {
 
     describe('When the search returns no chunks', () => {
       test('Then it returns an empty array', async () => {
-        kbSearchService.search.mockResolvedValue([]);
+        kbSearchService.search.mockResolvedValue({ chunks: [], isConfident: true });
 
         const result = await sut.execute(new KbSearchQuery(QUERY_TEXT));
 

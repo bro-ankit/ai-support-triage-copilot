@@ -4,3 +4,8 @@ export const SEARCH_DEFAULTS = {
   RERANK_POOL_K: 10,
   MAX_DISTANCE: 0.5,
 } as const;
+
+export const MULTI_HOP_DEFAULTS = {
+  CONFIDENCE_THRESHOLD: 0,
+  MAX_FOLLOW_UP_QUERIES: 2,
+} as const;
